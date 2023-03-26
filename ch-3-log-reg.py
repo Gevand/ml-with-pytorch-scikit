@@ -8,11 +8,13 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def plot_decision_regions(X, y, classifier, resolution=0.02):
+def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
+
     # setup marker generator and color map
     markers = ('o', 's', '^', 'v', '<')
     colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
     cmap = ListedColormap(colors[:len(np.unique(y))])
+
     # plot the decision surface
     x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
     x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
@@ -23,14 +25,31 @@ def plot_decision_regions(X, y, classifier, resolution=0.02):
     plt.contourf(xx1, xx2, lab, alpha=0.3, cmap=cmap)
     plt.xlim(xx1.min(), xx1.max())
     plt.ylim(xx2.min(), xx2.max())
+
+    # plot class examples
     for idx, cl in enumerate(np.unique(y)):
-        plt.scatter(x=X[y == cl, 0],
+        plt.scatter(x=X[y == cl, 0], 
                     y=X[y == cl, 1],
-                    alpha=0.8,
+                    alpha=0.8, 
                     c=colors[idx],
-                    marker=markers[idx],
-                    label=f'Class {cl}',
+                    marker=markers[idx], 
+                    label=f'Class {cl}', 
                     edgecolor='black')
+
+    # highlight test examples
+    if test_idx:
+        # plot all examples
+        X_test, y_test = X[test_idx, :], y[test_idx]
+
+        plt.scatter(X_test[:, 0],
+                    X_test[:, 1],
+                    c='none',
+                    edgecolor='black',
+                    alpha=1.0,
+                    linewidth=1,
+                    marker='o',
+                    s=100, 
+                    label='Test set') 
         
 def logit(p):
     return math.log(p/(1-p))
@@ -133,4 +152,20 @@ plt.xlabel('Petal length [standardized]')
 plt.ylabel('Petal width [standardized]')
 plt.legend(loc='upper left')
 plt.tight_layout()
-plt.show()
+plt.show() 
+
+X = iris.data
+sc.fit(X)
+X_std = sc.transform(X)
+y = iris["target"]
+
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression(C=100.0, solver='lbfgs', multi_class='ovr')
+lr.fit(X_train_std, y_train)
+plot_decision_regions(X=X_std, y=y,classifier=lr)
+
+plt.xlabel('Petal length [standardized]')
+plt.ylabel('Petal width [standardized]')
+plt.legend(loc='upper left')
+plt.tight_layout()
+plt.show() 
