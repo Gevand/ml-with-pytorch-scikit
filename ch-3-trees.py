@@ -1,3 +1,5 @@
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import tree
 from matplotlib.colors import ListedColormap
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
@@ -6,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 RANDOM_STATE = 42
+
 
 def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
 
@@ -49,6 +52,7 @@ def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
                     marker='o',
                     s=100,
                     label='Test set')
+
 
 def entropy(p):
     return - p * np.log2(p) - (1-p) * np.log2(1-p)
@@ -115,7 +119,18 @@ plt.legend(loc='upper left')
 plt.tight_layout()
 plt.show()
 
-from sklearn import tree
 feature_names = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width']
-tree.plot_tree(tree_model, feature_names=feature_names,filled=True)
+tree.plot_tree(tree_model, feature_names=feature_names, filled=True)
+plt.show()
+
+
+forest = RandomForestClassifier(
+    n_estimators=25, random_state=RANDOM_STATE, n_jobs=2)
+forest.fit(X_train, y_train)
+plot_decision_regions(X_combined, y_combined,
+                      classifier=forest, test_idx=range(105, 150))
+plt.xlabel('Petal length [cm]')
+plt.ylabel('Petal width [cm]')
+plt.legend(loc='upper left')
+plt.tight_layout()
 plt.show()
