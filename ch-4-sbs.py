@@ -104,3 +104,13 @@ plt.xlabel('Number of features')
 plt.grid()
 plt.tight_layout()
 plt.show()
+
+k3 = list(sbs.subsets_[10])
+print(df_wine.columns[1:][k3])
+knn.fit(X_train_std, y_train)
+print('Training accuracy:', knn.score(X_train_std, y_train))
+print('Test accuracy:', knn.score(X_test_std, y_test))
+
+knn.fit(X_train_std[:, k3], y_train)
+print('Training accuracy k3:', knn.score(X_train_std[:, k3], y_train))
+print('Test accuracy k3:', knn.score(X_test_std[:, k3], y_test))
