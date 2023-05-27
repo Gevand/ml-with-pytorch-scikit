@@ -103,3 +103,4 @@ pre_scorer = make_scorer(score_func=precision_score,
                          greater_is_better=True,
                          average='micro')
 print(pre_scorer)
+
