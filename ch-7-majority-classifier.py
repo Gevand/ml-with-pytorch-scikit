@@ -1,3 +1,10 @@
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn import datasets
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -36,7 +43,7 @@ class MajorityVoteClassifier(BaseEstimator, ClassifierMixin):
 
     def predict_proba(self, X):
         # every classifier votes
-        probas = np.asarray([clf.predict(X) for clf in self.classifiers_])
+        probas = np.asarray([clf.predict_proba(X) for clf in self.classifiers_])
         avg_proba = np.average(probas, axis=0,
                                weights=self.weights)  # apply the weights to each probability
         return avg_proba
@@ -68,3 +75,46 @@ class MajorityVoteClassifier(BaseEstimator, ClassifierMixin):
                         deep=True).items():
                     out[f'{name}__{key}'] = value
             return out
+
+
+iris = datasets.load_iris()
+X, y = iris.data[50:, [1, 2]], iris.target[50:]
+le = LabelEncoder()
+y = le.fit_transform(y)
+
+X_train, X_test, y_train, y_test =\
+    train_test_split(X, y,
+                     test_size=0.5,
+                     random_state=1,
+                     stratify=y)
+
+
+RANDOM_STATE = 1
+clf1 = LogisticRegression(penalty='l2', C=0.001,
+                          solver='lbfgs', random_state=RANDOM_STATE)
+clf2 = DecisionTreeClassifier(
+    max_depth=1, criterion='entropy', random_state=RANDOM_STATE)
+clf3 = KNeighborsClassifier(n_neighbors=1, p=2, metric='minkowski')
+pipe1 = Pipeline([['sc', StandardScaler()],
+                  ['clf', clf1]])
+pipe3 = Pipeline([['sc', StandardScaler()],
+                  ['clf', clf3]])
+clf_labels = ['Logistic regression', 'Decision tree', 'KNN']
+print('10-fold cross validation:\n')
+for clf, label in zip([pipe1, clf2, pipe3], clf_labels):
+    scores = cross_val_score(estimator=clf, X=X_train,
+                             y=y_train, cv=10, scoring='roc_auc')
+    print(
+        f'ROC AUC: {scores.mean():.2f} 'f'(+/- {scores.std():.2f}) [{label}]')
+
+mv_clf = MajorityVoteClassifier(classifiers=[pipe1, clf2, pipe3])
+clf_labels += ['Majority voting']
+all_clf = [pipe1, clf2, pipe3, mv_clf]
+for clf, label in zip(all_clf, clf_labels):
+    scores = cross_val_score(estimator=clf,
+                            X=X_train,
+                            y=y_train,
+                            cv=10,
+                            scoring='roc_auc')
+    print(f'ROC AUC: {scores.mean():.2f} '
+        f'(+/- {scores.std():.2f}) [{label}]')
