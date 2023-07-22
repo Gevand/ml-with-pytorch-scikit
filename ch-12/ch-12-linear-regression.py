@@ -1,3 +1,4 @@
+import torch.nn as nn
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,6 +66,42 @@ ax = fig.add_subplot(1, 2, 1)
 plt.plot(X_train_norm, y_train, 'o', markersize=10)
 plt.plot(X_test_norm, y_pred, '--', lw=3)
 plt.legend(['Training examples', 'Linear reg.'], fontsize=15)
+ax.set_xlabel('x', size=15)
+ax.set_ylabel('y', size=15)
+ax.tick_params(axis='both', which='major', labelsize=15)
+plt.show()
+
+input_size = 1
+output_size = 1
+model = nn.Linear(input_size, output_size)
+loss_fn = nn.MSELoss(reduction='mean')
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+for epoch in range(num_epochs):
+    for x_batch, y_batch, in train_dl:
+        # 1 gen pred
+        pred = model(x_batch)[:, 0]
+        # 2 calc loss
+        loss = loss_fn(pred, y_batch)
+        # 3 compute grad
+        loss.backward()
+        # 5 update prameters
+        optimizer.step()
+        # 6 reset grads
+        optimizer.zero_grad()
+    if epoch % log_epochs == 0:
+        print(f'Epoch {epoch} Loss {loss.item():.4f}')
+print('Final Parameters:', model.weight.item(), model.bias.item())
+X_test = np.linspace(0, 9, num=100, dtype='float32').reshape(-1, 1)
+X_test_norm = (X_test - np.mean(X_train)) / np.std(X_train)
+X_test_norm = torch.from_numpy(X_test_norm)
+y_pred = model(X_test_norm)[:, 0].detach().numpy()
+
+fig = plt.figure(figsize=(13, 5))
+ax = fig.add_subplot(1, 2, 1)
+plt.plot(X_train_norm, y_train, 'o', markersize=10)
+plt.plot(X_test_norm, y_pred, '--', lw=3)
+plt.legend(['Training examples', 'Linear reg with pytorch.'], fontsize=15)
 ax.set_xlabel('x', size=15)
 ax.set_ylabel('y', size=15)
 ax.tick_params(axis='both', which='major', labelsize=15)
