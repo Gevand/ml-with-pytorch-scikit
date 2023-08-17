@@ -4,7 +4,7 @@ import torch
 import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader
-
+import matplotlib.pyplot as plt
 image_path = './ch-13'
 transform = transforms.Compose([transforms.ToTensor()])
 mnist_dataset = torchvision.datasets.MNIST(
@@ -84,9 +84,27 @@ def train(model, num_epochs, train_dl, valid_dl, device='cuda'):
 
 
 torch.manual_seed(1)
-num_epochs = 20
+num_epochs = 5
 hist = train(model, num_epochs, train_dl, valid_dl)
 
 pred = model(mnist_test_dataset.data.to('cuda').unsqueeze(1) / 255.)
-is_correct = (torch.argmax(pred, dim=1) == mnist_test_dataset.targets.to('cuda')).float()
+is_correct = (torch.argmax(pred, dim=1) ==
+              mnist_test_dataset.targets.to('cuda')).float()
 print(f'Test accuracy: {is_correct.mean():.4f}')
+
+
+fig = plt.figure(figsize=(12, 4))
+for i in range(12):
+    ax = fig.add_subplot(2, 6, i+1)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    img = mnist_test_dataset[i][0][0, :, :]
+    pred = model(img.unsqueeze(0).unsqueeze(1).to('cuda'))
+    y_pred = torch.argmax(pred)
+    ax.imshow(img, cmap='gray_r')
+    ax.text(0.9, 0.1, y_pred.item(),
+            size=15, color='blue',
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform=ax.transAxes)
+plt.show()
