@@ -50,7 +50,6 @@ def plot_learning_history(history):
     ax.tick_params(axis='both', which='major', labelsize=15)
     plt.xlabel('Episodes', size=20)
     plt.ylabel('Final rewards', size=20)
-    plt.savefig('q-learning-history.png', dpi=300)
     plt.show()
 
 
