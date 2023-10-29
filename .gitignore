@@ -142,3 +142,4 @@ dmypy.json
 /ch-16/results
 /ch-17/MNIST
 /ch-18/QM9
+.vscode
