@@ -4,7 +4,7 @@ import time
 import pickle
 import os
 import rendering
-import descrete
+import discrete
 
 CELL_SIZE = 100
 MARGIN = 10
@@ -42,7 +42,7 @@ def draw_object(coords_list):
         obj.set_color(0.4, 0.4, 0.8)  # -> blue
     return obj
 
-class GridWorldEnv(descrete.DiscreteEnv):
+class GridWorldEnv(discrete.DiscreteEnv):
     def __init__(self, num_rows=4, num_cols=6, delay=0.05):
         self.num_rows = num_rows
         self.num_cols = num_cols
