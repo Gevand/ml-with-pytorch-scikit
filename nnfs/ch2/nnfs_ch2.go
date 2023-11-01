@@ -57,9 +57,9 @@ func Run3() {
 
 	outputs := [3]float32{0, 0, 0}
 
-	for neuron_count, _ := range biases {
+	for neuron_count := range biases {
 		//multiple weight * input and sum them up with a for loop
-		for input_index, _ := range inputs {
+		for input_index := range inputs {
 			outputs[neuron_count] += inputs[input_index] * weights[neuron_count][input_index]
 		}
 		//add a bias

@@ -25,7 +25,7 @@ func Create_spiral_data(samples int, classes int) (*mat.Dense, *mat.Dense) {
 			r := Linspace(0.0, 1, samples)
 			// t = np.linspace(class_number*4, (class_number+1)*4, samples) + np.random.randn(samples)*0.2
 			t := Linspace(float64(class_number*4.0), float64((class_number+1)*4), samples)
-			for i, _ := range t {
+			for i := range t {
 				noise := rand.NormFloat64() * .2
 				t[i] += noise
 			}
