@@ -2,8 +2,13 @@ package nnfs
 
 import (
 	"fmt"
+	u "nnfs/utilities"
 
 	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
 func Run1() {
@@ -126,4 +131,81 @@ func Run6() {
 	outputs_matrix.Mul(inputs, weightsT)
 	outputs_matrix.Add(outputs_matrix, biases)
 	fmt.Println("Output with library: ", outputs_matrix)
+}
+
+func Run7() {
+	fmt.Println("Fully connected 2 layers with a batch of inputs")
+	inputs := mat.NewDense(3, 4,
+		[]float64{
+			1, 2, 3, 2.5,
+			3, 5, -1, 2,
+			-1.5, 2.7, 3.3, -0.8})
+
+	weights1 := mat.NewDense(3, 4, []float64{
+		.2, .8, -.5, 1,
+		.5, -.91, 0.26, -.5,
+		-.26, -.27, .17, .87})
+	weightsT1 := weights1.T()
+
+	weights2 := mat.NewDense(3, 3, []float64{
+		.1, -.14, .5,
+		-.5, .12, -.33,
+		-.44, .73, -.13})
+	weightsT2 := weights2.T()
+
+	var rawB1 = []float64{2, 3, .5}
+	stackedB1 := append(rawB1, rawB1...)
+	stackedB1 = append(stackedB1, rawB1...)
+	var biases1 = mat.NewDense(3, 3, stackedB1)
+
+	var rawB2 = []float64{-1, 2, -.5}
+	stackedB2 := append(rawB2, rawB2...)
+	stackedB2 = append(stackedB2, rawB2...)
+	var biases2 = mat.NewDense(3, 3, stackedB2)
+
+	outputs_matrixInputToL1 := mat.NewDense(3, 3, nil)
+	outputs_matrixInputToL1.Mul(inputs, weightsT1)
+	outputs_matrixInputToL1.Add(outputs_matrixInputToL1, biases1)
+
+	outputs_MatrixL1ToL2 := mat.NewDense(3, 3, nil)
+	outputs_MatrixL1ToL2.Mul(outputs_matrixInputToL1, weightsT2)
+	outputs_MatrixL1ToL2.Add(outputs_MatrixL1ToL2, biases2)
+
+	fmt.Println("Output with library: ", outputs_MatrixL1ToL2)
+}
+
+func Run8() {
+	X, y := u.Create_spiral_data(100, 3)
+	fmt.Println("X:", X, "y:", y)
+	p := plot.New()
+	p.Title.Text = "Spiral"
+	p.X.Label.Text = "X"
+	p.Y.Label.Text = "Y"
+
+	pts1 := make(plotter.XYs, 100)
+	pts2 := make(plotter.XYs, 100)
+	pts3 := make(plotter.XYs, 100)
+	for i := range pts1 {
+		pts1[i].X = X.At(i, 0)
+		pts1[i].Y = X.At(i, 1)
+
+		pts2[i].X = X.At(i+100, 0)
+		pts2[i].Y = X.At(i+100, 1)
+
+		pts3[i].X = X.At(i+200, 0)
+		pts3[i].Y = X.At(i+200, 1)
+	}
+
+	err := plotutil.AddScatters(p,
+		"First", pts1,
+		"Second", pts2,
+		"Third", pts3)
+	if err != nil {
+		panic(err)
+	}
+
+	// Save the plot to a PNG file.
+	if err := p.Save(4*vg.Inch, 4*vg.Inch, "ch2/spiral.png"); err != nil {
+		panic(err)
+	}
 }

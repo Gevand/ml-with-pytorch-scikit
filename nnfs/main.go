@@ -13,4 +13,6 @@ func ch2() {
 	nnfs.Run4()
 	nnfs.Run5()
 	nnfs.Run6()
+	nnfs.Run7()
+	nnfs.Run8()
 }
