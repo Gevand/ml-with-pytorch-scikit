@@ -208,4 +208,9 @@ func Run8() {
 	if err := p.Save(4*vg.Inch, 4*vg.Inch, "ch2/spiral.png"); err != nil {
 		panic(err)
 	}
+
+	input_layer := u.NewLayerDense(2, 3)
+	input_layer.Forward(X)
+	fmt.Println(input_layer.Output.At(0, 0))
+	fmt.Println(input_layer.Output.At(1, 0))
 }
