@@ -2,6 +2,7 @@ package nnfs
 
 import (
 	"fmt"
+	"math"
 	u "nnfs/utilities"
 
 	"gonum.org/v1/gonum/mat"
@@ -205,12 +206,49 @@ func Run8() {
 	}
 
 	// Save the plot to a PNG file.
-	if err := p.Save(4*vg.Inch, 4*vg.Inch, "ch2/spiral.png"); err != nil {
+	if err := p.Save(4*vg.Inch, 4*vg.Inch, "ch2-4/spiral.png"); err != nil {
 		panic(err)
 	}
 
 	input_layer := u.NewLayerDense(2, 3)
+	activation_relu := u.NewActivationRelu()
 	input_layer.Forward(X)
 	fmt.Println(input_layer.Output.At(0, 0))
 	fmt.Println(input_layer.Output.At(1, 0))
+	activation_relu.Forward(input_layer.Output)
+	fmt.Println(activation_relu.Output.At(0, 0))
+	fmt.Println(activation_relu.Output.At(1, 0))
+}
+
+func Run9() {
+	fmt.Println("Softmax")
+	var raw = []float64{4.8, 1.21, 2.385}
+	var soft_maxed = [3]float64{}
+	soft_maxed_sum := 0.0
+	for i, input := range raw {
+		soft_maxed[i] = math.Pow(math.E, input)
+		soft_maxed_sum += soft_maxed[i]
+		fmt.Println(soft_maxed[i])
+	}
+
+	for i := range soft_maxed {
+		soft_maxed[i] = soft_maxed[i] / soft_maxed_sum
+		fmt.Println(soft_maxed[i])
+	}
+}
+
+func Run10() {
+	X, _ := u.Create_spiral_data(100, 3)
+
+	dense_1 := u.NewLayerDense(2, 3)
+	activation_1 := u.NewActivationRelu()
+	dense_1.Forward(X)
+	activation_1.Forward(dense_1.Output)
+
+	dense_2 := u.NewLayerDense(3, 3)
+	activation_2 := u.NewActivationSoftMax()
+	dense_2.Forward(activation_1.Output)
+	activation_2.Forward(dense_2.Output)
+	fmt.Print(activation_2.Output.RowView(0))
+	fmt.Print(activation_2.Output.RowView(1))
 }
