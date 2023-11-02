@@ -1,8 +1,12 @@
 package main
 
-import nnfs "nnfs/ch2"
+import (
+	"math/rand"
+	nnfs "nnfs/ch2"
+)
 
 func main() {
+	rand.Seed(42)
 	ch2()
 }
 
