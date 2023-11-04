@@ -74,3 +74,38 @@ print(rewards)
 ax[1].scatter(np.arange(len(rewards)),rewards)
 ax[1].set_xlabel("Plays - Softmax")
 plt.show()
+
+class ContextBandit:
+    def __init__(self, arms:int ) -> None:
+        self.arms = arms
+        self.init_distributions(arms)
+        self.update_state()
+    
+    def update_state(self):
+        self.state = np.random.randint(0, self.arms)
+
+    def init_distributions(self, arms:int):
+        self.bandit_matrix = np.random.rand(arms,arms)
+    
+    def reward(self, prob):
+        reward = 0
+        for _ in range(self.arms):
+            if random.random() < prob:
+                reward += 1
+        return reward
+
+    def get_state (self):
+        return self.state
+    
+    def get_reward(self, arm):
+        return self.reward(self.bandit_matrix[self.get_state()][arm])
+    
+    def choose_arm(self,arm):
+        reward = self.get_reward(arm)
+        self.update_state()
+        return reward
+
+env = ContextBandit(arms=10)
+state = env.get_state()
+reward = env.choose_arm(1)
+print(state, 'with reward:', reward)
