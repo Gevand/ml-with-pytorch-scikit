@@ -128,6 +128,15 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# python virtual environments
+bin/
+share/
+pyvenv.cfg
+include/
+lib64/
+lib64
+lib/
+
 #custom
 */excersize-movie-recommendation/ml-100k
 */aclImdb
