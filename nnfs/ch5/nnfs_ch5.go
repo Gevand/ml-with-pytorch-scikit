@@ -3,6 +3,7 @@ package nnfs
 import (
 	"fmt"
 	"math"
+	u "nnfs/utilities"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -57,9 +58,9 @@ func Run3() {
 		0, 1, 0,
 		0, 1, 0}
 	softmax_outputs_matrix := mat.NewDense(3, 3, softmax_outputs)
-	class_targets_matrix_transposed := mat.NewDense(3, 3, class_targets)
+	class_targets_matrix := mat.NewDense(3, 3, class_targets)
 	neg_log := mat.NewDense(3, 1, nil)
-	softmax_outputs_matrix.MulElem(softmax_outputs_matrix, class_targets_matrix_transposed)
+	softmax_outputs_matrix.MulElem(softmax_outputs_matrix, class_targets_matrix)
 
 	neg_log.Apply(func(r, c int, v float64) float64 {
 		return clip(-math.Log(mat.Sum(softmax_outputs_matrix.RowView(r))), 1e-7, 1-1e-7)
@@ -70,6 +71,23 @@ func Run3() {
 
 }
 
+func Run4() {
+	fmt.Println("Cross entropy loss across multiple outputs, both 2d matrices, using my class")
+	outputs := []float64{
+		.7, .1, .2,
+		.1, .5, .4,
+		.02, .9, .08}
+	targets := []float64{
+		1, 0, 0,
+		0, 1, 0,
+		0, 1, 0}
+	output_matrix := mat.NewDense(3, 3, outputs)
+	target_matrix := mat.NewDense(3, 3, targets)
+
+	loss := u.NewLoss_CategoricalCrossentropy()
+	fmt.Println(u.CalculateLoss(loss, output_matrix, target_matrix))
+}
+
 func clip(value, left, right float64) float64 {
 	if value >= left && value <= right {
 		return value
@@ -78,4 +96,29 @@ func clip(value, left, right float64) float64 {
 		return left
 	}
 	return right
+}
+
+func Run5() {
+	fmt.Println("Combining everything")
+	X, y := u.Create_spiral_data(100, 3)
+	//My loss function only works with one_hot_encoded, the book does some python stuff to handle
+	//1-d arrays, but MatDense is always 2d, so its just easier to 1 hot encode
+	y_one_hot := mat.NewDense(300, 3, nil)
+	for i := 0; i < y.RawMatrix().Rows; i++ {
+		y_one_hot.Set(i, int(y.At(i, 0)), 1.0)
+	}
+
+	dense_1 := u.NewLayerDense(2, 3)
+	activation_1 := u.NewActivationRelu()
+	dense_1.Forward(X)
+	activation_1.Forward(dense_1.Output)
+
+	dense_2 := u.NewLayerDense(3, 3)
+	activation_2 := u.NewActivationSoftMax()
+	dense_2.Forward(activation_1.Output)
+	activation_2.Forward(dense_2.Output)
+
+	loss_function := u.NewLoss_CategoricalCrossentropy()
+	loss := u.CalculateLoss(loss_function, activation_2.Output, y_one_hot)
+	fmt.Println("loss:", loss)
 }

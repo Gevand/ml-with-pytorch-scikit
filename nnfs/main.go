@@ -27,4 +27,6 @@ func ch5() {
 	nnfsCh5.Run1()
 	nnfsCh5.Run2()
 	nnfsCh5.Run3()
+	nnfsCh5.Run4()
+	nnfsCh5.Run5()
 }
