@@ -40,15 +40,3 @@ func Create_spiral_data(samples int, classes int) (*mat.Dense, *mat.Dense) {
 
 	return X, y
 }
-
-func Linspace(start, end float64, num int) []float64 {
-	if num < 0 {
-		panic("number of samples, %d, must be non-negative.")
-	}
-	result := make([]float64, num)
-	step := (end - start) / float64(num-1)
-	for i := range result {
-		result[i] = start + float64(i)*step
-	}
-	return result
-}
