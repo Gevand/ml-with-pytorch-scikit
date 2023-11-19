@@ -53,15 +53,19 @@ func Compare(first_input, second_input []float64) []float64 {
 func Accuracy(predictions, targets *mat.Dense) float64 {
 	//TODO: panic if predictions and targets arent' the same shape
 
-	argmax_predictions := mat.NewDense(predictions.RawMatrix().Rows, predictions.RawMatrix().Cols, nil)
-	argmax_targets := mat.NewDense(targets.RawMatrix().Rows, targets.RawMatrix().Cols, nil)
+	//TODO: better way to do this? But I can't have this function destroy the inputs
+	target_copy := mat.DenseCopyOf(targets)
+	predictions_copy := mat.DenseCopyOf(predictions)
 
-	argmax_predictions.Copy(predictions)
-	targets.Copy(argmax_targets)
+	argmax_predictions := mat.NewDense(predictions_copy.RawMatrix().Rows, predictions_copy.RawMatrix().Cols, nil)
+	argmax_targets := mat.NewDense(target_copy.RawMatrix().Rows, target_copy.RawMatrix().Cols, nil)
+
+	argmax_predictions.Copy(predictions_copy)
+	target_copy.Copy(argmax_targets)
 
 	for i := 0; i < 3; i++ {
-		argmax_predictions.Set(0, i, float64(Argmax(predictions.RawRowView(i))))
-		argmax_targets.Set(0, i, float64(Argmax(targets.RawRowView(i))))
+		argmax_predictions.Set(0, i, float64(Argmax(predictions_copy.RawRowView(i))))
+		argmax_targets.Set(0, i, float64(Argmax(target_copy.RawRowView(i))))
 	}
 
 	comparison := mat.NewDense(argmax_predictions.RawMatrix().Rows, argmax_predictions.RawMatrix().Cols, Compare(argmax_predictions.RawMatrix().Data, argmax_targets.RawMatrix().Data))
