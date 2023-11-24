@@ -18,7 +18,7 @@ func Run1() {
 	X, y := u.Create_vertical_data(100, 3)
 	fmt.Println("X:", X, "y:", y)
 	p := plot.New()
-	p.Title.Text = "Spiral"
+	p.Title.Text = "Vertical"
 	p.X.Label.Text = "X"
 	p.Y.Label.Text = "Y"
 

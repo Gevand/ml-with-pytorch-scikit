@@ -5,11 +5,12 @@ import (
 	nnfsCh2_4 "nnfs/ch2-4"
 	nnfsCh5 "nnfs/ch5"
 	nnfsCh6 "nnfs/ch6"
+	nnfsCh7 "nnfs/ch7"
 )
 
 func main() {
 	rand.Seed(42)
-	ch6()
+	ch7()
 }
 
 func ch2_4() {
@@ -38,4 +39,11 @@ func ch6() {
 	nnfsCh6.Run2()
 	nnfsCh6.Run3()
 	nnfsCh6.Run4()
+}
+
+func ch7() {
+	nnfsCh7.Run1()
+	nnfsCh7.Run2()
+	nnfsCh7.Run3()
+	nnfsCh7.Run4()
 }
