@@ -6,11 +6,12 @@ import (
 	nnfsCh5 "nnfs/ch5"
 	nnfsCh6 "nnfs/ch6"
 	nnfsCh7 "nnfs/ch7"
+	nnfsch9 "nnfs/ch9"
 )
 
 func main() {
 	rand.Seed(42)
-	ch7()
+	ch9()
 }
 
 func ch2_4() {
@@ -46,4 +47,12 @@ func ch7() {
 	nnfsCh7.Run2()
 	nnfsCh7.Run3()
 	nnfsCh7.Run4()
+}
+
+func ch8() {
+	//NOTHING - pure math chapter
+}
+
+func ch9() {
+	nnfsch9.Run1()
 }
