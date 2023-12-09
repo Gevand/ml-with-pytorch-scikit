@@ -4,7 +4,7 @@ from torch import optim
 import numpy as np
 from torch.nn import functional as f
 import gym
-
+from matplotlib import pyplot as plt
 import torch.multiprocessing as mp
 
 
@@ -28,7 +28,6 @@ class ActorCritic(nn.Module):
         return actor, critic
 
 
-
 def worker(t, worker_model, counter, params):
     worker_env = gym.make('CartPole-v1')
     worker_env.reset()
@@ -36,18 +35,20 @@ def worker(t, worker_model, counter, params):
     worker_opt.zero_grad()
     for i in range(params['epochs']):
         worker_opt.zero_grad()
-        values, logprobs, rewards = run_episode(worker_env, worker_model)
+        values, logprobs, rewards, G = run_episode(
+            worker_env, worker_model, params['n_steps'])
         actor_loss, citic_loss, eplen = update_params(
-            worker_opt, values, logprobs, rewards)
+            worker_opt, values, logprobs, rewards, G)
         counter.value = counter.value + 1
+        print(f'worker-{t}-length-{eplen}')
 
 
-def update_params(worker_opt, values, logprobs, rewards, clc=0.1, gamma=0.95):
+def update_params(worker_opt, values, logprobs, rewards, G, clc=0.1, gamma=0.95):
     rewards = torch.Tensor(rewards).flip(dims=(0,)).view(-1)
     logprobs = torch.stack(logprobs).flip(dims=(0,)).view(-1)
     values = torch.stack(values).flip(dims=(0,)).view(-1)
     Returns = []
-    ret_ = torch.Tensor([0])
+    ret_ = G
     for r in range(rewards.shape[0]):
         ret_ = rewards[r] + gamma * ret_
         Returns.append(ret_)
@@ -63,12 +64,14 @@ def update_params(worker_opt, values, logprobs, rewards, clc=0.1, gamma=0.95):
     return actor_loss, critic_loss, len(rewards)
 
 
-def run_episode(worker_env, worker_model):
-    state = torch.from_numpy(worker_env.env.state).float()
+def run_episode(worker_env, worker_model, n_steps=1):
+    raw_state = np.array(worker_env.env.state)
+    state = torch.from_numpy(raw_state).float()
     values, logprobs, rewards = [], [], []
     done = False
     j = 0
-    while (done == False):
+    G = torch.Tensor([0])
+    while (j < n_steps and done == False):
         j += 1
         policy, value = worker_model(state)
         values.append(value)
@@ -84,15 +87,18 @@ def run_episode(worker_env, worker_model):
             worker_env.reset()
         else:
             reward = 1.0
+            G = value.detach()
         rewards.append(reward)
-    return values, logprobs, rewards
+    return values, logprobs, rewards, G
+
 
 MasterNode = ActorCritic()
 MasterNode.share_memory()
 processes = []
 params = {
-    'epochs': 10,
+    'epochs': 1000,
     'n_workers': 7,
+    'n_steps': 10,
 }
 counter = mp.Value('i', 0)
 for i in range(params['n_workers']):
@@ -104,3 +110,10 @@ for p in processes:
 for p in processes:
     p.terminate()
 print('done')
+
+MasterNode.eval()
+worker_env = gym.make('CartPole-v1')
+worker_env.reset()
+with torch.inference_mode():
+    v, l, r, G = run_episode(worker_env, MasterNode, n_steps=10000)
+    print('Total episode length: ', len(v))
