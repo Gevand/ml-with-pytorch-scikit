@@ -50,6 +50,18 @@ func Compare(first_input, second_input []float64) []float64 {
 	return output
 }
 
+//​np.sum(dvalues, ​axis​=​0​, ​keepdims=​True​)
+func SumAxis0KeepDimsTrue(input *mat.Dense) *mat.Dense {
+	ouput := mat.NewDense(1, input.RawMatrix().Cols, nil)
+	for col := 0; col < ouput.RawMatrix().Cols; col++ {
+		sum := 0.0
+		for row := 0; row < input.RawMatrix().Rows; row++ {
+			sum += input.At(row, col)
+		}
+		ouput.Set(0, col, sum)
+	}
+	return ouput
+}
 func Accuracy(predictions, targets *mat.Dense) float64 {
 	//TODO: panic if predictions and targets arent' the same shape
 
