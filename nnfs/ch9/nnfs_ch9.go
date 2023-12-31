@@ -143,3 +143,129 @@ func Run6() {
 	dbiases := nnfs.SumAxis0KeepDimsTrue(dvalues)
 	fmt.Println(dbiases)
 }
+
+func Run7() {
+	fmt.Println("Back propogation for three neurons - Gradient wrt to activation relu function")
+	dvalues := mat.NewDense(3, 4, []float64{
+		1.0, 3.0, 3.0, 4.0,
+		5.0, 6.0, 7.0, 8.0,
+		9.0, 10.0, 11.0, 12.0})
+	zvalues := mat.NewDense(3, 4, []float64{
+		1.0, 2.0, -3.0, -4,
+		2.0, 7.0, -1.0, 3,
+		-1.0, 2.0, 5.0, -1})
+
+	drelu := mat.NewDense(3, 4, nil)
+	for i := 0; i < drelu.RawMatrix().Rows; i++ {
+		for j := 0; j < drelu.RawMatrix().Cols; j++ {
+			v := 0.0
+			if zvalues.At(i, j) > 0 {
+				v = 1.0
+			}
+			drelu.Set(i, j, v)
+		}
+	}
+	fmt.Println("Drelu", drelu)
+	drelu.MulElem(drelu, dvalues)
+	fmt.Println("Drelu post multiply", drelu)
+}
+func Run8() {
+	fmt.Println("Back propogation for three neurons - Gradient wrt to activation relu function - simpler version")
+	dvalues := mat.NewDense(3, 4, []float64{
+		1.0, 3.0, 3.0, 4.0,
+		5.0, 6.0, 7.0, 8.0,
+		9.0, 10.0, 11.0, 12.0})
+	zvalues := mat.NewDense(3, 4, []float64{
+		1.0, 2.0, -3.0, -4,
+		2.0, 7.0, -1.0, 3,
+		-1.0, 2.0, 5.0, -1})
+	drelu := mat.NewDense(3, 4, nil)
+	drelu.Copy(dvalues)
+	for i := 0; i < drelu.RawMatrix().Rows; i++ {
+		for j := 0; j < drelu.RawMatrix().Cols; j++ {
+			v := drelu.At(i, j)
+			if zvalues.At(i, j) < 0 {
+				v = 0.0
+			}
+			drelu.Set(i, j, v)
+		}
+	}
+	fmt.Println("Drelu on run 8, should be same as run 7, just simpler", drelu)
+}
+
+func Run9() {
+	fmt.Println("Back propogation for three neurons - Putting it all together")
+	// dvalues := mat.NewDense(3, 3, []float64{
+	// 	1.0, 1.0, 1.0,
+	// 	2.0, 2.0, 2.0,
+	// 	3.0, 3.0, 3.0})
+	inputs := mat.NewDense(3, 4, []float64{
+		1, 2, 3, 2.5,
+		2., 5., -1., 2,
+		-1.5, 2.7, 3.3, -.8})
+	weights := mat.NewDense(3, 4, []float64{
+		.2, .8, -.5, 1,
+		.5, -.91, 0.26, -.5,
+		-.26, -.27, .17, .87})
+	weights_t := mat.DenseCopyOf(weights.T())
+	biases := mat.NewDense(1, 3, []float64{2, 3, .5})
+
+	//calculate forward -- (multiply * weights + bias)
+	layer_outputs := mat.NewDense(3, 3, nil)
+	layer_outputs.Mul(inputs, weights_t)
+	layer_outputs.Apply(func(r, c int, v float64) float64 {
+		return v + biases.At(0, c)
+	}, layer_outputs)
+
+	//calculate forward -- activation function (relu)
+	fmt.Println("Layer outputs pre relu", layer_outputs)
+	relu_outputs := mat.NewDense(3, 3, nil)
+	relu_outputs.Copy(layer_outputs)
+	relu_outputs.Apply(func(r, c int, v float64) float64 {
+		if v > 1 {
+			return v
+		}
+		return 0
+	}, relu_outputs)
+	fmt.Println("Layer outputs post relu", relu_outputs)
+
+	//for this example use relu_outputs as drelu
+	d_relu := mat.NewDense(3, 3, nil)
+	d_relu.Copy(relu_outputs)
+	d_relu.Apply(func(r, c int, v float64) float64 {
+		if layer_outputs.At(r, c) <= 0 {
+			return 0
+		}
+		return v
+	}, d_relu)
+	fmt.Println("Drelu -", d_relu)
+
+	dinputs := mat.NewDense(3, 4, nil)
+	dinputs.Mul(d_relu, weights)
+	fmt.Println("Dinputs -", dinputs)
+
+	dweights := mat.NewDense(4, 3, nil)
+	dweights.Mul(inputs.T(), d_relu)
+	fmt.Println("Dweights -", dweights)
+
+	dbiases := nnfs.SumAxis0KeepDimsTrue(d_relu)
+	fmt.Println("Dbiases -", dbiases)
+
+	dweights.Apply(func(r, c int, v float64) float64 {
+		return v * -0.001
+	}, dweights)
+	dbiases.Apply(func(r, c int, v float64) float64 {
+		return v * -0.001
+	}, dbiases)
+
+	weights_t.Apply(func(r, c int, v float64) float64 {
+		return v + dweights.At(r, c)
+	}, weights_t)
+
+	biases.Apply(func(r, c int, v float64) float64 {
+		return v + dbiases.At(r, c)
+	}, biases)
+
+	fmt.Print("Weights post update", weights_t)
+	fmt.Print("Biases post update", biases)
+}
