@@ -7,7 +7,8 @@ import (
 )
 
 type ActivationRelu struct {
-	Output *mat.Dense
+	Output, Inputs *mat.Dense
+	dinputs        *mat.Dense
 }
 
 func NewActivationRelu() *ActivationRelu {
@@ -16,6 +17,9 @@ func NewActivationRelu() *ActivationRelu {
 }
 
 func (activation *ActivationRelu) Forward(input *mat.Dense) {
+	activation.Inputs = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	activation.Inputs.Copy(input)
+
 	raw := input.RawMatrix().Data
 	for i := range raw {
 		if raw[i] < 0 {
@@ -23,6 +27,18 @@ func (activation *ActivationRelu) Forward(input *mat.Dense) {
 		}
 	}
 	activation.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, raw)
+}
+
+func (activation *ActivationRelu) Backward(dvalues *mat.Dense) {
+	activation.dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	activation.dinputs.Copy(dvalues)
+
+	activation.dinputs.Apply(func(r, c int, v float64) float64 {
+		if activation.Inputs.At(r, c) <= 0 {
+			return 0
+		}
+		return v
+	}, activation.dinputs)
 }
 
 type ActivationSoftMax struct {
@@ -34,6 +50,7 @@ func NewActivationSoftMax() *ActivationSoftMax {
 	return output
 }
 func (activation *ActivationSoftMax) Forward(input *mat.Dense) {
+
 	activation.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
 	activation.Output.Copy(input)
 	for i := 0; i < activation.Output.RawMatrix().Rows; i++ {

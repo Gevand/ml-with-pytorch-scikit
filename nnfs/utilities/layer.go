@@ -7,10 +7,12 @@ import (
 )
 
 type LayerDense struct {
-	n_inputs, n_neurons int
-	Weights             *mat.Dense
-	Biases              *mat.Dense
-	Output              *mat.Dense
+	n_inputs, n_neurons        int
+	dweights, dbiases, dinputs *mat.Dense
+	Weights                    *mat.Dense
+	Biases                     *mat.Dense
+	Output                     *mat.Dense
+	Inputs                     *mat.Dense
 }
 
 func NewLayerDense(n_inputs int, n_neurons int) *LayerDense {
@@ -25,6 +27,9 @@ func NewLayerDense(n_inputs int, n_neurons int) *LayerDense {
 }
 
 func (layer *LayerDense) Forward(input *mat.Dense) {
+	layer.Inputs = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	layer.Inputs.Copy(input)
+
 	layer.Output = mat.NewDense(input.RawMatrix().Rows, layer.n_neurons, nil)
 
 	var rawBias = make([]float64, input.RawMatrix().Rows*layer.n_neurons)
@@ -35,4 +40,13 @@ func (layer *LayerDense) Forward(input *mat.Dense) {
 
 	layer.Output.Mul(input, layer.Weights)
 	layer.Output.Add(layer.Output, biases1)
+}
+
+func (layer *LayerDense) Backward(dvalues *mat.Dense) {
+	layer.dweights = mat.NewDense(layer.Inputs.RawMatrix().Cols, dvalues.RawMatrix().Cols, nil)
+	layer.dweights.Mul(layer.Inputs.T(), dvalues)
+
+	layer.dbiases = SumAxis0KeepDimsTrue(dvalues)
+	layer.dinputs = mat.NewDense(dvalues.RawMatrix().Rows, layer.Weights.RawMatrix().Cols, nil)
+	layer.dinputs.Mul(dvalues, layer.Weights)
 }
