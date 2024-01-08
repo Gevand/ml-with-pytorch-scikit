@@ -8,7 +8,7 @@ import (
 
 type ActivationRelu struct {
 	Output, Inputs *mat.Dense
-	dinputs        *mat.Dense
+	Dinputs        *mat.Dense
 }
 
 func NewActivationRelu() *ActivationRelu {
@@ -30,25 +30,27 @@ func (activation *ActivationRelu) Forward(input *mat.Dense) {
 }
 
 func (activation *ActivationRelu) Backward(dvalues *mat.Dense) {
-	activation.dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
-	activation.dinputs.Copy(dvalues)
+	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	activation.Dinputs.Copy(dvalues)
 
-	activation.dinputs.Apply(func(r, c int, v float64) float64 {
+	activation.Dinputs.Apply(func(r, c int, v float64) float64 {
 		if activation.Inputs.At(r, c) <= 0 {
 			return 0
 		}
 		return v
-	}, activation.dinputs)
+	}, activation.Dinputs)
 }
 
 type ActivationSoftMax struct {
-	Output *mat.Dense
+	Output  *mat.Dense
+	Dinputs *mat.Dense
 }
 
 func NewActivationSoftMax() *ActivationSoftMax {
 	output := &ActivationSoftMax{}
 	return output
 }
+
 func (activation *ActivationSoftMax) Forward(input *mat.Dense) {
 
 	activation.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
@@ -64,5 +66,41 @@ func (activation *ActivationSoftMax) Forward(input *mat.Dense) {
 			soft_maxed[i] = soft_maxed[i] / soft_maxed_sum
 		}
 		activation.Output.SetRow(i, soft_maxed)
+	}
+}
+
+func (activation *ActivationSoftMax) Backward(dvalues *mat.Dense) {
+	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	activation.Dinputs.Copy(dvalues)
+
+	/*
+		Python code I'm trying to copy
+		for ​index, (single_output, single_dvalues) ​in ​​enumerate​(​zip​(self.output, dvalues)):
+			​# Flatten output array
+			​single_output ​= ​single_output.reshape(​-​1​, ​1​)
+			​# Calculate Jacobian matrix of the output and
+			​jacobian_matrix ​= ​np.diagflat(single_output) ​- ​np.dot(single_output, single_output.T)
+			​# Calculate sample-wise gradient
+			# and add it to the array of sample gradients
+			​self.dinputs[index] ​= ​np.dot(jacobian_matrix,
+			single_dvalues)
+	*/
+	for i := 0; i < activation.Output.RawMatrix().Rows; i++ {
+		single_dvalues := mat.NewDense(1, activation.Output.RawMatrix().Cols, dvalues.RawRowView(i))
+		single_output := mat.NewDense(1, activation.Output.RawMatrix().Cols, activation.Output.RawRowView(i))
+		single_output_dot := mat.NewDense(3, 3, nil)
+		single_output_dot.Mul(single_output.T(), single_output)
+
+		//intialized as a diagnal matrix with the single_output being the diagnal
+		jacobian_matrix := mat.NewDense(activation.Output.RawMatrix().Cols, activation.Output.RawMatrix().Cols, nil)
+		jacobian_matrix.Apply(func(r, c int, v float64) float64 {
+			if r != c {
+				return 0 - single_output_dot.At(r, c)
+			}
+			return single_output.At(0, r) - single_output_dot.At(r, c)
+		}, jacobian_matrix)
+		dinputs_temp := mat.NewDense(jacobian_matrix.RawMatrix().Cols, single_dvalues.RawMatrix().Rows, nil)
+		dinputs_temp.Mul(jacobian_matrix, single_dvalues.T())
+		activation.Dinputs.SetRow(i, dinputs_temp.RawMatrix().Data)
 	}
 }

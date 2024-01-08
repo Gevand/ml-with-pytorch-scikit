@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	nnfs "nnfs/utilities"
+	u "nnfs/utilities"
 	"strconv"
 
 	"gonum.org/v1/gonum/mat"
@@ -268,4 +269,27 @@ func Run9() {
 
 	fmt.Print("Weights post update", weights_t)
 	fmt.Print("Biases post update", biases)
+}
+
+func Run10() {
+	fmt.Println("Back propogation softmax testing")
+
+	softmax_outputs := mat.NewDense(3, 3, []float64{
+		.7, .1, .2,
+		.1, .5, .4,
+		.02, .9, .08})
+	class_targets := mat.NewDense(3, 1, []float64{0, 1, 1})
+	class_targets_one_hot := mat.NewDense(3, 3, nil)
+	for i := 0; i < class_targets.RawMatrix().Rows; i++ {
+		class_targets_one_hot.Set(i, int(class_targets.At(i, 0)), 1.0)
+	}
+
+	soft_max := u.NewActivationSoftMax()
+	loss_function := u.NewLoss_CategoricalCrossentropy()
+	loss_function.Backward(softmax_outputs, class_targets_one_hot)
+
+	fmt.Println(loss_function.Dinputs)
+	soft_max.Output = softmax_outputs //pretend this is what Forward calculated
+	soft_max.Backward(loss_function.Dinputs)
+	fmt.Println(soft_max.Dinputs)
 }

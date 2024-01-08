@@ -11,6 +11,7 @@ type Loss interface {
 }
 
 type Loss_CategoricalCrossentropy struct {
+	Dinputs *mat.Dense
 }
 
 func NewLoss_CategoricalCrossentropy() *Loss_CategoricalCrossentropy {
@@ -32,7 +33,15 @@ func (loss *Loss_CategoricalCrossentropy) Forward(y_pred *mat.Dense, y_true *mat
 	}, y_pred_clipped)
 	return y_pred_clipped
 }
-
+func (loss *Loss_CategoricalCrossentropy) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
+	//expect the y_true to be one hot encoded, the book has some code here to transform this into a one hot encoded thing if its not
+	loss.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	loss.Dinputs.Copy(dvalues)
+	samples := float64(y_true.RawMatrix().Cols)
+	loss.Dinputs.Apply(func(r, c int, v float64) float64 {
+		return ((-1) * y_true.At(r, c)) / v / samples
+	}, loss.Dinputs)
+}
 func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	data_loss := 0.0
 	sample_losses := loss.Forward(y_pred, y_true)
