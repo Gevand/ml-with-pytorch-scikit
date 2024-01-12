@@ -64,4 +64,6 @@ func ch9() {
 	nnfsch9.Run8()
 	nnfsch9.Run9()
 	nnfsch9.Run10()
+	nnfsch9.Run11()
+	nnfsch9.Run12()
 }

@@ -293,3 +293,54 @@ func Run10() {
 	soft_max.Backward(loss_function.Dinputs)
 	fmt.Println(soft_max.Dinputs)
 }
+
+func Run11() {
+	fmt.Println("Back propogation softmax testing combined, should match run 10")
+
+	softmax_outputs := mat.NewDense(3, 3, []float64{
+		.7, .1, .2,
+		.1, .5, .4,
+		.02, .9, .08})
+	class_targets := mat.NewDense(3, 1, []float64{0, 1, 1})
+	class_targets_one_hot := mat.NewDense(3, 3, nil)
+	for i := 0; i < class_targets.RawMatrix().Rows; i++ {
+		class_targets_one_hot.Set(i, int(class_targets.At(i, 0)), 1.0)
+	}
+
+	soft_max_and_loss := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
+	soft_max_and_loss.Backward(softmax_outputs, class_targets_one_hot)
+	fmt.Println(soft_max_and_loss.Dinputs)
+}
+
+func Run12() {
+	fmt.Println("Combining everything + accuracy")
+	X, y := u.Create_spiral_data(100, 3)
+
+	//My loss function only works with one_hot_encoded, the book does some python stuff to handle
+	//1-d arrays, but MatDense is always 2d, so its just easier to 1 hot encode
+	y_one_hot := mat.NewDense(300, 3, nil)
+	for i := 0; i < y.RawMatrix().Rows; i++ {
+		y_one_hot.Set(i, int(y.At(i, 0)), 1.0)
+	}
+
+	dense_1 := u.NewLayerDense(2, 3)
+	activation_1 := u.NewActivationRelu()
+	dense_1.Forward(X)
+	activation_1.Forward(dense_1.Output)
+
+	dense_2 := u.NewLayerDense(3, 3)
+	loss_activation := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
+	dense_2.Forward(activation_1.Output)
+	loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+
+	accuracy := u.Accuracy(loss_activation.Activation.Output, y_one_hot)
+	fmt.Println("loss:", loss, "accuracy:", accuracy)
+
+	loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+	dense_2.Backward(loss_activation.Dinputs)
+	activation_1.Backward(dense_2.Dinputs)
+	dense_1.Backward(activation_1.Dinputs)
+
+	fmt.Println("DENSE 1:", dense_1.Dweights, dense_1.Dbiases)
+	fmt.Println("DENSE 2:", dense_2.Dweights, dense_2.Dbiases)
+}

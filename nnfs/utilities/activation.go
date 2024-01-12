@@ -104,3 +104,31 @@ func (activation *ActivationSoftMax) Backward(dvalues *mat.Dense) {
 		activation.Dinputs.SetRow(i, dinputs_temp.RawMatrix().Data)
 	}
 }
+
+type ActivationSoftMaxLossCategoricalCrossEntropy struct {
+	Activation *ActivationSoftMax
+	Loss       *Loss_CategoricalCrossentropy
+	Dinputs    *mat.Dense
+}
+
+func NewActivationSoftMaxLossCategoricalCrossEntropy() *ActivationSoftMaxLossCategoricalCrossEntropy {
+	output := &ActivationSoftMaxLossCategoricalCrossEntropy{Activation: NewActivationSoftMax(), Loss: NewLoss_CategoricalCrossentropy()}
+	return output
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Forward(input *mat.Dense, y_true *mat.Dense) float64 {
+	combine.Activation.Forward(input)
+	return CalculateLoss(combine.Loss, combine.Activation.Output, y_true)
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
+	//y prediction - y true
+	//since y true is one hot encoded, we subract 1 or 0
+	combine.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	combine.Dinputs.Sub(dvalues, y_true)
+	//normalize
+	samples := float64(y_true.RawMatrix().Cols)
+	combine.Dinputs.Apply(func(r, c int, v float64) float64 {
+		return v / samples
+	}, combine.Dinputs)
+}

@@ -8,7 +8,7 @@ import (
 
 type LayerDense struct {
 	n_inputs, n_neurons        int
-	dweights, dbiases, dinputs *mat.Dense
+	Dweights, Dbiases, Dinputs *mat.Dense
 	Weights                    *mat.Dense
 	Biases                     *mat.Dense
 	Output                     *mat.Dense
@@ -43,10 +43,10 @@ func (layer *LayerDense) Forward(input *mat.Dense) {
 }
 
 func (layer *LayerDense) Backward(dvalues *mat.Dense) {
-	layer.dweights = mat.NewDense(layer.Inputs.RawMatrix().Cols, dvalues.RawMatrix().Cols, nil)
-	layer.dweights.Mul(layer.Inputs.T(), dvalues)
+	layer.Dweights = mat.NewDense(layer.Inputs.RawMatrix().Cols, dvalues.RawMatrix().Cols, nil)
+	layer.Dweights.Mul(layer.Inputs.T(), dvalues)
 
-	layer.dbiases = SumAxis0KeepDimsTrue(dvalues)
-	layer.dinputs = mat.NewDense(dvalues.RawMatrix().Rows, layer.Weights.RawMatrix().Cols, nil)
-	layer.dinputs.Mul(dvalues, layer.Weights)
+	layer.Dbiases = SumAxis0KeepDimsTrue(dvalues)
+	layer.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, layer.Weights.RawMatrix().Rows, nil)
+	layer.Dinputs.Mul(dvalues, layer.Weights.T())
 }
