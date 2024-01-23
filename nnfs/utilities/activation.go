@@ -58,8 +58,13 @@ func (activation *ActivationSoftMax) Forward(input *mat.Dense) {
 	for i := 0; i < activation.Output.RawMatrix().Rows; i++ {
 		var soft_maxed = make([]float64, activation.Output.RawMatrix().Cols)
 		soft_maxed_sum := 0.0
+
+		max_in_row := input.At(i, 0)
 		for j := 0; j < activation.Output.RawMatrix().Cols; j++ {
-			soft_maxed[j] = math.Pow(math.E, input.At(i, j))
+			max_in_row = math.Max(max_in_row, input.At(i, j))
+		}
+		for j := 0; j < activation.Output.RawMatrix().Cols; j++ {
+			soft_maxed[j] = math.Pow(math.E, input.At(i, j)-max_in_row)
 			soft_maxed_sum += soft_maxed[j]
 		}
 		for i := range soft_maxed {

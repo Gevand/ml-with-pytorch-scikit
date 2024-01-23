@@ -69,19 +69,21 @@ func Accuracy(predictions, targets *mat.Dense) float64 {
 	target_copy := mat.DenseCopyOf(targets)
 	predictions_copy := mat.DenseCopyOf(predictions)
 
-	argmax_predictions := mat.NewDense(predictions_copy.RawMatrix().Rows, predictions_copy.RawMatrix().Cols, nil)
-	argmax_targets := mat.NewDense(target_copy.RawMatrix().Rows, target_copy.RawMatrix().Cols, nil)
+	argmax_predictions := mat.NewDense(predictions_copy.RawMatrix().Rows, 1, nil)
+	argmax_targets := mat.NewDense(target_copy.RawMatrix().Rows, 1, nil)
 
 	argmax_predictions.Copy(predictions_copy)
 	target_copy.Copy(argmax_targets)
 
-	for i := 0; i < 3; i++ {
-		argmax_predictions.Set(0, i, float64(Argmax(predictions_copy.RawRowView(i))))
-		argmax_targets.Set(0, i, float64(Argmax(target_copy.RawRowView(i))))
+	for i := 0; i < argmax_predictions.RawMatrix().Rows; i++ {
+		argmax_predictions.Set(i, 0, float64(Argmax(predictions_copy.RawRowView(i))))
+		argmax_targets.Set(i, 0, float64(Argmax(target_copy.RawRowView(i))))
 	}
 
 	comparison := mat.NewDense(argmax_predictions.RawMatrix().Rows, argmax_predictions.RawMatrix().Cols, Compare(argmax_predictions.RawMatrix().Data, argmax_targets.RawMatrix().Data))
-	mean := mat.Sum(comparison) / float64(argmax_predictions.RawMatrix().Cols)
+
+	sum := mat.Sum(comparison)
+	mean := sum / float64(argmax_predictions.RawMatrix().Cols*argmax_predictions.RawMatrix().Rows)
 
 	return mean
 }

@@ -32,14 +32,10 @@ func (layer *LayerDense) Forward(input *mat.Dense) {
 
 	layer.Output = mat.NewDense(input.RawMatrix().Rows, layer.n_neurons, nil)
 
-	var rawBias = make([]float64, input.RawMatrix().Rows*layer.n_neurons)
-	for i := range rawBias {
-		rawBias[i] = layer.Biases.At(0, i%layer.n_neurons)
-	}
-	var biases1 = mat.NewDense(input.RawMatrix().Rows, layer.n_neurons, rawBias)
-
 	layer.Output.Mul(input, layer.Weights)
-	layer.Output.Add(layer.Output, biases1)
+	layer.Output.Apply(func(r, c int, v float64) float64 {
+		return v + layer.Biases.At(0, c)
+	}, layer.Output)
 }
 
 func (layer *LayerDense) Backward(dvalues *mat.Dense) {
