@@ -9,8 +9,8 @@ import (
 type LayerDense struct {
 	n_inputs, n_neurons        int
 	Dweights, Dbiases, Dinputs *mat.Dense
-	Weights                    *mat.Dense
-	Biases                     *mat.Dense
+	Weights, Weight_Momentums  *mat.Dense
+	Biases, Bias_Momentums     *mat.Dense
 	Output                     *mat.Dense
 	Inputs                     *mat.Dense
 }
