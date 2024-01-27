@@ -7,12 +7,12 @@ import (
 )
 
 type LayerDense struct {
-	n_inputs, n_neurons        int
-	Dweights, Dbiases, Dinputs *mat.Dense
-	Weights, Weight_Momentums  *mat.Dense
-	Biases, Bias_Momentums     *mat.Dense
-	Output                     *mat.Dense
-	Inputs                     *mat.Dense
+	n_inputs, n_neurons                     int
+	Dweights, Dbiases, Dinputs              *mat.Dense
+	Weights, Weight_Momentums, Weight_Cache *mat.Dense
+	Biases, Bias_Momentums, Bias_Cache      *mat.Dense
+	Output                                  *mat.Dense
+	Inputs                                  *mat.Dense
 }
 
 func NewLayerDense(n_inputs int, n_neurons int) *LayerDense {

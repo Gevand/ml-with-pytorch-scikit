@@ -69,6 +69,9 @@ func ch9() {
 	nnfsch9.Run12()
 }
 func ch10() {
-	nnfsch10.Run1()
-	nnfsch10.Run2()
+	//keep these commented out, they take a bit longer and make imgages, just uncomment whichever one you want to test it
+	//nnfsch10.Run1()
+	//nnfsch10.Run2()
+	//nnfsch10.Run3()
+	nnfsch10.Run4()
 }
