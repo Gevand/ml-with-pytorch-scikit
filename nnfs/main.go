@@ -73,5 +73,6 @@ func ch10() {
 	//nnfsch10.Run1()
 	//nnfsch10.Run2()
 	//nnfsch10.Run3()
-	nnfsch10.Run4()
+	//nnfsch10.Run4()
+	nnfsch10.Run5()
 }

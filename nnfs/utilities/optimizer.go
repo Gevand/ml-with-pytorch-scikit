@@ -150,9 +150,6 @@ func (optimizer *OptimizerRmsProp) UpdateParameters(layer *LayerDense) {
 	}, layer.Bias_Cache)
 
 	layer.Weights.Apply(func(r, c int, v float64) float64 {
-		if v == math.NaN() || layer.Dweights.At(r, c) == math.NaN() {
-			fmt.Println(optimizer.Iterations)
-		}
 		sgd := (-1 * optimizer.CurrentLearningRate * layer.Dweights.At(r, c))
 		sqrt := math.Sqrt(layer.Weight_Cache.At(r, c)) + optimizer.Epsilon
 		return v + (sgd / sqrt)
@@ -166,5 +163,91 @@ func (optimizer *OptimizerRmsProp) UpdateParameters(layer *LayerDense) {
 }
 
 func (optimizer *OptimizerRmsProp) PostUpdateParams() {
+	optimizer.Iterations++
+}
+
+type OptimizerAdam struct {
+	LearningRate, Decay, Epsilon, Beta1, Beta2 float64 //hyper parameters
+	Iterations                                 int
+	CurrentLearningRate                        float64
+}
+
+func NewOptimizerAdam(lr, decay, eps, beta1, beta2 float64) *OptimizerAdam {
+	output := &OptimizerAdam{LearningRate: lr, Decay: decay, CurrentLearningRate: lr, Epsilon: eps, Beta1: beta1, Beta2: beta2}
+	return output
+}
+
+func (optimizer *OptimizerAdam) PreUpdateParams() {
+	if optimizer.Decay > 0 {
+		optimizer.CurrentLearningRate = optimizer.LearningRate * (1. / (1 + optimizer.Decay*float64(optimizer.Iterations)))
+	}
+}
+
+func (optimizer *OptimizerAdam) UpdateParameters(layer *LayerDense) {
+	if layer.Weight_Cache == nil {
+		layer.Weight_Cache = mat.NewDense(layer.Weights.RawMatrix().Rows, layer.Weights.RawMatrix().Cols, nil)
+		layer.Bias_Cache = mat.NewDense(layer.Biases.RawMatrix().Rows, layer.Biases.RawMatrix().Cols, nil)
+		layer.Bias_Momentums = mat.NewDense(layer.Biases.RawMatrix().Rows, layer.Biases.RawMatrix().Cols, nil)
+		layer.Weight_Momentums = mat.NewDense(layer.Weights.RawMatrix().Rows, layer.Weights.RawMatrix().Cols, nil)
+	}
+
+	layer.Weight_Momentums.Apply(func(r, c int, v float64) float64 {
+		return optimizer.Beta1*v + ((1 - optimizer.Beta1) * layer.Dweights.At(r, c))
+	}, layer.Weight_Momentums)
+
+	layer.Bias_Momentums.Apply(func(r, c int, v float64) float64 {
+		return optimizer.Beta1*v + ((1 - optimizer.Beta1) * layer.Dbiases.At(r, c))
+	}, layer.Bias_Momentums)
+
+	weight_momentums_corrected := mat.NewDense(layer.Weight_Momentums.RawMatrix().Rows, layer.Weight_Momentums.RawMatrix().Cols, layer.Weight_Momentums.RawMatrix().Data)
+	correction := 1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations+1))
+	weight_momentums_corrected.Apply(func(r, c int, v float64) float64 {
+		return layer.Weight_Momentums.At(r, c) / correction
+	}, weight_momentums_corrected)
+
+	bias_momentums_corrected := mat.NewDense(layer.Bias_Momentums.RawMatrix().Rows, layer.Bias_Momentums.RawMatrix().Cols, layer.Bias_Momentums.RawMatrix().Data)
+	bias_momentums_corrected.Apply(func(r, c int, v float64) float64 {
+		return layer.Bias_Momentums.At(r, c) / correction
+	}, bias_momentums_corrected)
+
+	//beta2 is Rho from RmsProp
+	layer.Weight_Cache.Apply(func(r, c int, v float64) float64 {
+		rho_calc := optimizer.Beta2 * v
+		dweight_calc := (1 - optimizer.Beta2) * math.Pow(layer.Dweights.At(r, c), 2)
+		return rho_calc + dweight_calc
+	}, layer.Weight_Cache)
+	layer.Bias_Cache.Apply(func(r, c int, v float64) float64 {
+		rho_calc := optimizer.Beta2 * v
+		dweight_calc := (1 - optimizer.Beta2) * math.Pow(layer.Dbiases.At(r, c), 2)
+		return rho_calc + dweight_calc
+	}, layer.Bias_Cache)
+
+	//correct the cache
+	weight_cache_corrected := mat.NewDense(layer.Weight_Cache.RawMatrix().Rows, layer.Weight_Cache.RawMatrix().Cols, nil)
+	bias_cache_corrected := mat.NewDense(layer.Bias_Cache.RawMatrix().Rows, layer.Bias_Cache.RawMatrix().Cols, nil)
+
+	correction_2 := 1 - math.Pow(optimizer.Beta2, float64(optimizer.Iterations+1))
+	weight_cache_corrected.Apply(func(r, c int, v float64) float64 {
+		return layer.Weight_Cache.At(r, c) / correction_2
+	}, weight_cache_corrected)
+	bias_cache_corrected.Apply(func(r, c int, v float64) float64 {
+		return layer.Bias_Cache.At(r, c) / correction_2
+	}, bias_cache_corrected)
+
+	layer.Weights.Apply(func(r, c int, v float64) float64 {
+		sgd := (-1 * optimizer.CurrentLearningRate * weight_momentums_corrected.At(r, c))
+		sqrt := math.Sqrt(weight_cache_corrected.At(r, c)) + optimizer.Epsilon
+		return v + (sgd / sqrt)
+	}, layer.Weights)
+
+	layer.Biases.Apply(func(r, c int, v float64) float64 {
+		sgd := (-1 * optimizer.CurrentLearningRate * bias_momentums_corrected.At(r, c))
+		sqrt := math.Sqrt(bias_cache_corrected.At(r, c)) + optimizer.Epsilon
+		return v + (sgd / sqrt)
+	}, layer.Biases)
+	//fmt.Println("Iteration ", optimizer.Iterations, "for layer ", layer.Name, " Dweight -", layer.Dweights.At(0, 0), "Cache - ", layer.Weight_Cache.At(0, 0))
+}
+
+func (optimizer *OptimizerAdam) PostUpdateParams() {
 	optimizer.Iterations++
 }

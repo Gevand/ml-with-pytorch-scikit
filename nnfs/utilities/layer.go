@@ -13,6 +13,7 @@ type LayerDense struct {
 	Biases, Bias_Momentums, Bias_Cache      *mat.Dense
 	Output                                  *mat.Dense
 	Inputs                                  *mat.Dense
+	Name                                    string
 }
 
 func NewLayerDense(n_inputs int, n_neurons int) *LayerDense {
