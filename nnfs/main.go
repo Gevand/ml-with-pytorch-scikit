@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	nnfsch10 "nnfs/ch10"
+	nnfsch14 "nnfs/ch14"
 	nnfsCh2_4 "nnfs/ch2-4"
 	nnfsCh5 "nnfs/ch5"
 	nnfsCh6 "nnfs/ch6"
@@ -12,7 +13,7 @@ import (
 
 func main() {
 	rand.Seed(42)
-	ch10()
+	ch14()
 }
 
 func ch2_4() {
@@ -75,4 +76,10 @@ func ch10() {
 	//nnfsch10.Run3()
 	//nnfsch10.Run4()
 	nnfsch10.Run5()
+}
+
+func ch14() {
+	nnfsch14.Run1()
+	nnfsch14.Run2()
+	nnfsch14.Run3()
 }

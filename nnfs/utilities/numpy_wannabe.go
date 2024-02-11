@@ -62,6 +62,7 @@ func SumAxis0KeepDimsTrue(input *mat.Dense) *mat.Dense {
 	}
 	return ouput
 }
+
 func Accuracy(predictions, targets *mat.Dense) float64 {
 	//TODO: panic if predictions and targets arent' the same shape
 

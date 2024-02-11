@@ -8,6 +8,7 @@ import (
 
 type Loss interface {
 	Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense
+	RegularizationLoss(layer *LayerDense) float64
 }
 
 type Loss_CategoricalCrossentropy struct {
@@ -17,6 +18,7 @@ type Loss_CategoricalCrossentropy struct {
 func NewLoss_CategoricalCrossentropy() *Loss_CategoricalCrossentropy {
 	output := &Loss_CategoricalCrossentropy{}
 	return output
+
 }
 
 func (loss *Loss_CategoricalCrossentropy) Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense {
@@ -42,6 +44,7 @@ func (loss *Loss_CategoricalCrossentropy) Backward(dvalues *mat.Dense, y_true *m
 		return ((-1) * y_true.At(r, c)) / v / samples
 	}, loss.Dinputs)
 }
+
 func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	data_loss := 0.0
 	sample_losses := loss.Forward(y_pred, y_true)
@@ -51,6 +54,44 @@ func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	}, sample_losses)
 	data_loss = data_loss / float64(sample_losses.RawMatrix().Rows*sample_losses.RawMatrix().Cols)
 	return data_loss
+}
+
+func (l *Loss_CategoricalCrossentropy) RegularizationLoss(layer *LayerDense) float64 {
+	regularization_loss := 0.0
+	//l1 stuff
+	if layer.Weight_Regulizer_L1 > 0 {
+		var sum float64 = 0.0
+		for _, value := range layer.Weights.RawMatrix().Data {
+			sum += math.Abs(value)
+		}
+		regularization_loss += sum * layer.Weight_Regulizer_L1
+	}
+
+	if layer.Bias_Regulizer_L1 > 0 {
+		var sum float64 = 0.0
+		for _, value := range layer.Biases.RawMatrix().Data {
+			sum += math.Abs(value)
+		}
+		regularization_loss += sum * layer.Bias_Regulizer_L1
+	}
+
+	//l2 stuff
+	if layer.Weight_Regulizer_L2 > 0 {
+		var sum float64 = 0.0
+		for _, value := range layer.Weights.RawMatrix().Data {
+			sum += math.Pow(value, 2)
+		}
+		regularization_loss += sum * layer.Weight_Regulizer_L2
+	}
+
+	if layer.Bias_Regulizer_L2 > 0 {
+		var sum float64 = 0.0
+		for _, value := range layer.Biases.RawMatrix().Data {
+			sum += math.Pow(value, 2)
+		}
+		regularization_loss += sum * layer.Bias_Regulizer_L2
+	}
+	return regularization_loss
 }
 
 func clip(value, left, right float64) float64 {

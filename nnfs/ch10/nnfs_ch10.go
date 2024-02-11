@@ -151,7 +151,7 @@ func Run2() {
 }
 
 func Run3() {
-	fmt.Println("Using ADAGRAD - Couldn't get this to work")
+	fmt.Println("Using ADAGRAD ")
 	X, y := u.Create_spiral_data(100, 3)
 
 	y_one_hot := mat.NewDense(300, 3, nil)
