@@ -80,3 +80,32 @@ func (layer *LayerDense) Backward(dvalues *mat.Dense) {
 	layer.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, layer.Weights.RawMatrix().Rows, nil)
 	layer.Dinputs.Mul(dvalues, layer.Weights.T())
 }
+
+type LayerDropout struct {
+	rate                                float64
+	BinaryMask, Output, Inputs, Dinputs *mat.Dense
+}
+
+func (layer *LayerDropout) Forward(input *mat.Dense) {
+	layer.Inputs = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	layer.Inputs.Copy(input)
+
+	layer.BinaryMask = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, Binomial(1, layer.rate, input.RawMatrix().Rows*input.RawMatrix().Cols))
+	//scale the binary mask
+	layer.BinaryMask.Apply(func(r, c int, v float64) float64 {
+		return v / (1.0 - layer.rate)
+	}, layer.BinaryMask)
+
+	layer.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	layer.Output.MulElem(layer.Inputs, layer.BinaryMask)
+}
+
+func (layer *LayerDropout) Backward(dvalues *mat.Dense) {
+	layer.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	layer.Dinputs.MulElem(dvalues, layer.BinaryMask)
+}
+
+func NewLayerDropout(rate float64) *LayerDropout {
+	output := &LayerDropout{rate: rate}
+	return output
+}

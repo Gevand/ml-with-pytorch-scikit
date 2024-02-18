@@ -59,6 +59,8 @@ func (activation *ActivationSoftMax) Forward(input *mat.Dense) {
 		var soft_maxed = make([]float64, activation.Output.RawMatrix().Cols)
 		soft_maxed_sum := 0.0
 
+		//had some stability issues, decided to subtract the max as suggested here
+		//https://stackoverflow.com/questions/42599498/numerically-stable-softmax
 		max_in_row := input.At(i, 0)
 		for j := 0; j < activation.Output.RawMatrix().Cols; j++ {
 			max_in_row = math.Max(max_in_row, input.At(i, j))

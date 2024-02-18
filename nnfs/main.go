@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	nnfsch10 "nnfs/ch10"
 	nnfsch14 "nnfs/ch14"
+	nnfsch15 "nnfs/ch15"
 	nnfsCh2_4 "nnfs/ch2-4"
 	nnfsCh5 "nnfs/ch5"
 	nnfsCh6 "nnfs/ch6"
@@ -13,7 +14,7 @@ import (
 
 func main() {
 	rand.Seed(42)
-	ch14()
+	ch15()
 }
 
 func ch2_4() {
@@ -82,4 +83,10 @@ func ch14() {
 	nnfsch14.Run1()
 	nnfsch14.Run2()
 	nnfsch14.Run3()
+}
+
+func ch15() {
+	nnfsch15.Run1()
+	nnfsch15.Run2()
+	nnfsch15.Run3()
 }

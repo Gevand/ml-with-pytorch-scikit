@@ -1,6 +1,10 @@
 package nnfs
 
-import "gonum.org/v1/gonum/mat"
+import (
+	"math/rand"
+
+	"gonum.org/v1/gonum/mat"
+)
 
 func Linspace(start, end float64, num int) []float64 {
 	if num < 0 {
@@ -50,7 +54,7 @@ func Compare(first_input, second_input []float64) []float64 {
 	return output
 }
 
-//​np.sum(dvalues, ​axis​=​0​, ​keepdims=​True​)
+// ​np.sum(dvalues, ​axis​=​0​, ​keepdims=​True​)
 func SumAxis0KeepDimsTrue(input *mat.Dense) *mat.Dense {
 	ouput := mat.NewDense(1, input.RawMatrix().Cols, nil)
 	for col := 0; col < ouput.RawMatrix().Cols; col++ {
@@ -61,6 +65,18 @@ func SumAxis0KeepDimsTrue(input *mat.Dense) *mat.Dense {
 		ouput.Set(0, col, sum)
 	}
 	return ouput
+}
+
+func Binomial(number_of_experiments int, probability float64, size int) []float64 {
+	output := make([]float64, size)
+	experiment := 0
+	for experiment < number_of_experiments {
+		for index, _ := range output {
+			output[index] += float64(rand.Intn(2))
+		}
+		experiment += 1
+	}
+	return output
 }
 
 func Accuracy(predictions, targets *mat.Dense) float64 {
