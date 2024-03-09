@@ -86,7 +86,7 @@ func Run3() {
 		data_loss := loss_activation.Forward(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
-			regularization_loss := loss_activation.Loss.RegularizationLoss(dense_1) + loss_activation.Loss.RegularizationLoss(dense_2)
+			regularization_loss := u.RegularizationLoss(loss_activation.Loss, dense_1) + u.RegularizationLoss(loss_activation.Loss, dense_2)
 			loss := data_loss + regularization_loss
 			fmt.Println("epoch", i, "data loss -->", data_loss, "regularization_loss -->", regularization_loss, "loss -->", loss)
 			accuracy := u.Accuracy(loss_activation.Activation.Output, y_one_hot)

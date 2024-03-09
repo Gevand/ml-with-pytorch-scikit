@@ -8,7 +8,6 @@ import (
 
 type Loss interface {
 	Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense
-	RegularizationLoss(layer *LayerDense) float64
 }
 
 type Loss_CategoricalCrossentropy struct {
@@ -56,7 +55,7 @@ func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	return data_loss
 }
 
-func (l *Loss_CategoricalCrossentropy) RegularizationLoss(layer *LayerDense) float64 {
+func RegularizationLoss(loss Loss, layer *LayerDense) float64 {
 	regularization_loss := 0.0
 	//l1 stuff
 	if layer.Weight_Regulizer_L1 > 0 {
@@ -94,6 +93,101 @@ func (l *Loss_CategoricalCrossentropy) RegularizationLoss(layer *LayerDense) flo
 	return regularization_loss
 }
 
+type Loss_BinaryCrossentropy struct {
+	Dinputs *mat.Dense
+}
+
+func NewLoss_BinaryCrossentropy() *Loss_BinaryCrossentropy {
+	output := &Loss_BinaryCrossentropy{}
+	return output
+}
+
+func (loss *Loss_BinaryCrossentropy) Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense {
+	y_pred_clipped := mat.NewDense(y_pred.RawMatrix().Rows, y_pred.RawMatrix().Cols, nil)
+	y_pred_clipped.Copy(y_pred)
+	y_pred_clipped.Apply(func(r, c int, v float64) float64 {
+		return clip(v, 1e-7, 1-1e-7)
+	}, y_pred_clipped)
+
+	sample_losses := mat.NewDense(y_pred.RawMatrix().Rows, y_pred.RawMatrix().Cols, nil)
+	sample_losses.Apply(func(r, c int, v float64) float64 {
+		y_true_r_c := y_true.At(r, c)
+		y_pred_clipped_r_c := y_pred_clipped.At(r, c)
+
+		return -1*(y_true_r_c*math.Log(y_pred_clipped_r_c)) + (1-y_true_r_c)*math.Log(1-y_pred_clipped_r_c)
+	}, sample_losses)
+
+	sample_losses_mean := mat.NewDense(y_pred.RawMatrix().Rows, 1, nil)
+	column_count := float64(y_pred.RawMatrix().Cols)
+	sample_losses_mean.Apply(func(r, c int, v float64) float64 {
+		row_sum := mat.Sum(sample_losses.RowView(r))
+		return row_sum / column_count
+	}, sample_losses_mean)
+
+	return sample_losses_mean
+}
+func (loss *Loss_BinaryCrossentropy) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
+	samples := float64(dvalues.RawMatrix().Rows)
+	outputs := float64(dvalues.RawMatrix().Cols)
+
+	clipped_dvalues := mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	clipped_dvalues.Copy(dvalues)
+	clipped_dvalues.Apply(func(r, c int, v float64) float64 {
+		return clip(v, 1e-7, 1-1e-7)
+	}, clipped_dvalues)
+
+	loss.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	loss.Dinputs.Apply(func(r, c int, v float64) float64 {
+		clipped_dvalues_r_c := clipped_dvalues.At(r, c)
+		y_true_value_r_c := y_true.At(r, c)
+		return -(y_true_value_r_c/clipped_dvalues_r_c - (1-y_true_value_r_c)/(1-clipped_dvalues_r_c)) / outputs
+	}, loss.Dinputs)
+
+	loss.Dinputs.Apply(func(r, c int, v float64) float64 {
+		return v / samples
+	}, loss.Dinputs)
+
+}
+
+type Loss_MSE struct {
+	Dinputs *mat.Dense
+}
+
+func NewLoss_MSE() *Loss_MSE {
+	output := &Loss_MSE{}
+	return output
+}
+
+func (loss *Loss_MSE) Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense {
+	sample_losses := mat.NewDense(y_pred.RawMatrix().Rows, y_pred.RawMatrix().Cols, nil)
+	sample_losses.Apply(func(r, c int, v float64) float64 {
+		return math.Pow((y_true.At(r, c) - y_pred.At(r, c)), 2.0)
+	}, sample_losses)
+
+	sample_losses_mean := mat.NewDense(y_pred.RawMatrix().Rows, 1, nil)
+	column_count := float64(y_pred.RawMatrix().Cols)
+	sample_losses_mean.Apply(func(r, c int, v float64) float64 {
+		row_sum := mat.Sum(sample_losses.RowView(r))
+		return row_sum / column_count
+	}, sample_losses_mean)
+
+	return sample_losses_mean
+}
+
+func (loss *Loss_MSE) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
+	samples := float64(dvalues.RawMatrix().Rows)
+	outputs := float64(dvalues.RawMatrix().Cols)
+
+	loss.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	loss.Dinputs.Apply(func(r, c int, v float64) float64 {
+
+		return -2 * (y_true.At(r, c) - dvalues.At(r, c)) / outputs
+	}, loss.Dinputs)
+
+	loss.Dinputs.Apply(func(r, c int, v float64) float64 {
+		return v / samples
+	}, loss.Dinputs)
+}
 func clip(value, left, right float64) float64 {
 	if value >= left && value <= right {
 		return value

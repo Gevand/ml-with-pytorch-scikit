@@ -18,6 +18,14 @@ func Linspace(start, end float64, num int) []float64 {
 	return result
 }
 
+func Arange(size int) []float64 {
+	result := make([]float64, size)
+	for i := range result {
+		result[i] = float64(i)
+	}
+	return result
+}
+
 func Argmax(input []float64) int {
 	if input == nil || len(input) == 0 {
 		panic("input must have at least one item")

@@ -139,3 +139,51 @@ func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Backward(dvalues *m
 		return v / samples
 	}, combine.Dinputs)
 }
+
+type ActivationSigmoid struct {
+	Inputs  *mat.Dense
+	Output  *mat.Dense
+	Dinputs *mat.Dense
+}
+
+func NewActivationSigmoid() *ActivationSigmoid {
+	output := &ActivationSigmoid{}
+	return output
+}
+func (activation *ActivationSigmoid) Forward(input *mat.Dense) {
+	activation.Inputs = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	activation.Inputs.Copy(input)
+
+	activation.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	activation.Output.Apply(func(r, c int, v float64) float64 {
+		exp := 1 + math.Exp((-1 * activation.Inputs.At(r, c)))
+		return 1 / exp
+	}, activation.Output)
+}
+func (activation *ActivationSigmoid) Backward(dvalues *mat.Dense) {
+	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	activation.Dinputs.Apply(func(r, c int, v float64) float64 {
+		output := activation.Output.At(r, c)
+		return dvalues.At(r, c) * (1 - output) * output
+	}, activation.Dinputs)
+}
+
+type ActivationLinear struct {
+	Inputs  *mat.Dense
+	Output  *mat.Dense
+	Dinputs *mat.Dense
+}
+
+func NewActivationLinear() *ActivationLinear {
+	output := &ActivationLinear{}
+	return output
+}
+
+func (activation *ActivationLinear) Forward(input *mat.Dense) {
+	activation.Inputs = input
+	activation.Output = input
+}
+func (activation *ActivationLinear) Backward(dvalues *mat.Dense) {
+	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
+	activation.Dinputs.Copy(dvalues)
+}
