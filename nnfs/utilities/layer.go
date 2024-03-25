@@ -6,6 +6,11 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+type Layer interface {
+	Forward(input *mat.Dense)
+	Backward(dvalues *mat.Dense)
+}
+
 type LayerDense struct {
 	n_inputs, n_neurons                                                            int
 	Dweights, Dbiases, Dinputs                                                     *mat.Dense

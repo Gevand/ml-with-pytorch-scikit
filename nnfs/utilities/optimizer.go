@@ -7,6 +7,12 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+type Optimizer interface {
+	PreUpdateParams()
+	UpdateParameters(layer *LayerDense)
+	PostUpdateParams()
+}
+
 type OptimizerSGD struct {
 	LearningRate, Decay, Momentum float64 //hyper parameters
 	Iterations                    int

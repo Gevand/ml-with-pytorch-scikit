@@ -7,6 +7,7 @@ import (
 	nnfsch15 "nnfs/ch15"
 	nnfsch16 "nnfs/ch16"
 	nnfsch17 "nnfs/ch17"
+	nnfsch18 "nnfs/ch18"
 	nnfsCh2_4 "nnfs/ch2-4"
 	nnfsCh5 "nnfs/ch5"
 	nnfsCh6 "nnfs/ch6"
@@ -16,7 +17,7 @@ import (
 
 func main() {
 	rand.Seed(42)
-	ch17()
+	ch18()
 }
 
 func ch2_4() {
@@ -100,4 +101,8 @@ func ch16() {
 func ch17() {
 	nnfsch17.Run1()
 	nnfsch17.Run2()
+}
+
+func ch18() {
+	nnfsch18.Run1()
 }
