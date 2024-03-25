@@ -2,8 +2,10 @@ package nnfs
 
 import (
 	"fmt"
+	"math"
 	u "nnfs/utilities"
 
+	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
@@ -35,13 +37,14 @@ func Run2() {
 	fmt.Println("Training a model to predict sine dataset as regression")
 
 	X, y := u.Create_data(1000)
-
+	std := u.Calculate_std(y)
+	std = std / 25 //book uses 250, I made it 25
 	dense_1 := u.NewLayerDense(1, 64)
 	activation_1 := u.NewActivationRelu()
 	dense_2 := u.NewLayerDense(64, 1)
 	activation_2 := u.NewActivationLinear()
 	loss_function := u.NewLoss_MSE()
-	optimizer := u.NewOptimizerAdam(0.01, 5e-7, 1e-7, 0.9, 0.999)
+	optimizer := u.NewOptimizerAdam(0.005, 1e-3, 1e-7, 0.9, 0.999)
 
 	max_epoch := 10001
 	for i := 0; i < max_epoch; i++ {
@@ -55,10 +58,20 @@ func Run2() {
 			regularization_loss := u.RegularizationLoss(loss_function, dense_1) + u.RegularizationLoss(loss_function, dense_2)
 			loss := data_loss + regularization_loss
 
-			//TODO: Calculate accuracy
-			//predictions := mat.NewDense(activation_2.Output.RawMatrix().Rows, activation_2.Output.RawMatrix().Cols, nil)
-
-			fmt.Println("epoch", i, "data loss -->", data_loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "accuracy -->", 0.0)
+			predictions := mat.NewDense(activation_2.Output.RawMatrix().Rows, activation_2.Output.RawMatrix().Cols, nil)
+			predictions.Apply(func(r, c int, v float64) float64 {
+				pred := activation_2.Output.At(r, 0)
+				real := y.At(r, 0)
+				if math.Abs(pred-real) < std {
+					return 1
+				}
+				return 0
+			}, predictions)
+			//all the 1s gets summed up
+			pred_sum := mat.Sum(predictions)
+			row_cnt := float64(y.RawMatrix().Rows)
+			accuracy := pred_sum / row_cnt * 100
+			fmt.Println("epoch", i, "data loss -->", data_loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "accuracy -->", accuracy, "%")
 		}
 
 		loss_function.Backward(activation_2.Output, y)

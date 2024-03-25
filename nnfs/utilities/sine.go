@@ -20,3 +20,16 @@ func Create_data(samples int) (*mat.Dense, *mat.Dense) {
 	}, y)
 	return X, y
 }
+
+func Calculate_std(y *mat.Dense) float64 {
+	total := (float64(y.RawMatrix().Cols) * float64(y.RawMatrix().Rows))
+	sum := mat.Sum(y)
+	mean := sum / total
+	std := 0.0
+	y.Apply(func(r, c int, v float64) float64 {
+		std += math.Pow(v-mean, 2)
+		return v
+	}, y)
+	std = math.Sqrt(std / total)
+	return std
+}
