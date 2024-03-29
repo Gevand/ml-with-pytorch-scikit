@@ -11,8 +11,8 @@ type ILayer interface {
 	Backward(dvalues *mat.Dense)
 	SetPrevious(layer_or_loss ILayer)
 	SetNext(layer_or_loss ILayer)
-	GetOutput() *mat.Dense //TODO: Refactor this
-	GetPreviousOutput() *mat.Dense
+	GetOutput() *mat.Dense
+	GetPreviousOutput() *mat.Dense //TODO: Refactor this, make it just GetPrevious()
 	GetNext() ILayer
 	GetDInputs() *mat.Dense
 }
