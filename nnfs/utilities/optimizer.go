@@ -7,7 +7,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type Optimizer interface {
+type IOptimizer interface {
 	PreUpdateParams()
 	UpdateParameters(layer *LayerDense)
 	PostUpdateParams()

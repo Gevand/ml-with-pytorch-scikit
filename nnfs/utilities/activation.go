@@ -9,6 +9,7 @@ import (
 type ActivationRelu struct {
 	Output, Inputs *mat.Dense
 	Dinputs        *mat.Dense
+	Prev, Next     ILayer
 }
 
 func NewActivationRelu() *ActivationRelu {
@@ -39,6 +40,30 @@ func (activation *ActivationRelu) Backward(dvalues *mat.Dense) {
 		}
 		return v
 	}, activation.Dinputs)
+}
+
+func (activation *ActivationRelu) SetPrevious(layer_or_loss ILayer) {
+	activation.Prev = layer_or_loss
+}
+
+func (activation *ActivationRelu) SetNext(layer_or_loss ILayer) {
+	activation.Next = layer_or_loss
+}
+
+func (activation *ActivationRelu) GetOutput() *mat.Dense {
+	return activation.Output
+}
+
+func (activation *ActivationRelu) GetPreviousOutput() *mat.Dense {
+	return activation.Prev.GetOutput()
+}
+
+func (activation *ActivationRelu) GetNext() ILayer {
+	return activation.Next
+}
+
+func (activation *ActivationRelu) GetDInputs() *mat.Dense {
+	return activation.Dinputs
 }
 
 type ActivationSoftMax struct {
@@ -116,6 +141,7 @@ type ActivationSoftMaxLossCategoricalCrossEntropy struct {
 	Activation *ActivationSoftMax
 	Loss       *Loss_CategoricalCrossentropy
 	Dinputs    *mat.Dense
+	Prev, Next ILayer
 }
 
 func NewActivationSoftMaxLossCategoricalCrossEntropy() *ActivationSoftMaxLossCategoricalCrossEntropy {
@@ -141,9 +167,10 @@ func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Backward(dvalues *m
 }
 
 type ActivationSigmoid struct {
-	Inputs  *mat.Dense
-	Output  *mat.Dense
-	Dinputs *mat.Dense
+	Inputs     *mat.Dense
+	Output     *mat.Dense
+	Dinputs    *mat.Dense
+	Prev, Next ILayer
 }
 
 func NewActivationSigmoid() *ActivationSigmoid {
@@ -169,9 +196,10 @@ func (activation *ActivationSigmoid) Backward(dvalues *mat.Dense) {
 }
 
 type ActivationLinear struct {
-	Inputs  *mat.Dense
-	Output  *mat.Dense
-	Dinputs *mat.Dense
+	Inputs     *mat.Dense
+	Output     *mat.Dense
+	Dinputs    *mat.Dense
+	Prev, Next ILayer
 }
 
 func NewActivationLinear() *ActivationLinear {
@@ -186,4 +214,28 @@ func (activation *ActivationLinear) Forward(input *mat.Dense) {
 func (activation *ActivationLinear) Backward(dvalues *mat.Dense) {
 	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
 	activation.Dinputs.Copy(dvalues)
+}
+
+func (activation *ActivationLinear) SetPrevious(layer_or_loss ILayer) {
+	activation.Prev = layer_or_loss
+}
+
+func (activation *ActivationLinear) SetNext(layer_or_loss ILayer) {
+	activation.Next = layer_or_loss
+}
+
+func (activation *ActivationLinear) GetOutput() *mat.Dense {
+	return activation.Output
+}
+
+func (activation *ActivationLinear) GetPreviousOutput() *mat.Dense {
+	return activation.Prev.GetOutput()
+}
+
+func (activation *ActivationLinear) GetNext() ILayer {
+	return activation.Next
+}
+
+func (activation *ActivationLinear) GetDInputs() *mat.Dense {
+	return activation.Dinputs
 }

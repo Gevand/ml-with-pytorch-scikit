@@ -6,13 +6,20 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type Layer interface {
+type ILayer interface {
 	Forward(input *mat.Dense)
 	Backward(dvalues *mat.Dense)
+	SetPrevious(layer_or_loss ILayer)
+	SetNext(layer_or_loss ILayer)
+	GetOutput() *mat.Dense //TODO: Refactor this
+	GetPreviousOutput() *mat.Dense
+	GetNext() ILayer
+	GetDInputs() *mat.Dense
 }
 
 type LayerDense struct {
 	n_inputs, n_neurons                                                            int
+	Prev, Next                                                                     ILayer
 	Dweights, Dbiases, Dinputs                                                     *mat.Dense
 	Weights, Weight_Momentums, Weight_Cache                                        *mat.Dense
 	Biases, Bias_Momentums, Bias_Cache                                             *mat.Dense
@@ -86,8 +93,33 @@ func (layer *LayerDense) Backward(dvalues *mat.Dense) {
 	layer.Dinputs.Mul(dvalues, layer.Weights.T())
 }
 
+func (layer *LayerDense) SetPrevious(layer_or_loss ILayer) {
+	layer.Prev = layer_or_loss
+}
+
+func (layer *LayerDense) SetNext(layer_or_loss ILayer) {
+	layer.Next = layer_or_loss
+}
+
+func (layer *LayerDense) GetOutput() *mat.Dense {
+	return layer.Output
+}
+
+func (layer *LayerDense) GetPreviousOutput() *mat.Dense {
+	return layer.Prev.GetOutput()
+}
+
+func (layer *LayerDense) GetNext() ILayer {
+	return layer.Next
+}
+
+func (layer *LayerDense) GetDInputs() *mat.Dense {
+	return layer.Dinputs
+}
+
 type LayerDropout struct {
 	rate                                float64
+	Prev, Next                          ILayer
 	BinaryMask, Output, Inputs, Dinputs *mat.Dense
 }
 
@@ -113,4 +145,73 @@ func (layer *LayerDropout) Backward(dvalues *mat.Dense) {
 func NewLayerDropout(rate float64) *LayerDropout {
 	output := &LayerDropout{rate: rate}
 	return output
+}
+
+func (layer *LayerDropout) SetPrevious(layer_or_loss ILayer) {
+	layer.Prev = layer_or_loss
+}
+
+func (layer *LayerDropout) SetNext(layer_or_loss ILayer) {
+	layer.Next = layer_or_loss
+}
+
+func (layer *LayerDropout) GetOutput() *mat.Dense {
+	return layer.Output
+}
+
+func (layer *LayerDropout) GetPreviousOutput() *mat.Dense {
+	return layer.Prev.GetOutput()
+}
+
+func (layer *LayerDropout) GetNext() ILayer {
+	return layer.Next
+}
+
+func (layer *LayerDropout) GetDInputs() *mat.Dense {
+	return layer.Dinputs
+}
+
+type LayerInput struct {
+	Output, Inputs *mat.Dense
+	Next           ILayer
+}
+
+func (layer *LayerInput) Forward(input *mat.Dense) {
+	layer.Inputs = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	layer.Inputs.Copy(input)
+	layer.Output = mat.NewDense(input.RawMatrix().Rows, input.RawMatrix().Cols, nil)
+	layer.Output.Copy(input)
+}
+
+func (layer *LayerInput) Backward(dvalues *mat.Dense) {
+	//Do nothing
+}
+
+func NewInputLayer() *LayerInput {
+	output := &LayerInput{}
+	return output
+}
+
+func (layer *LayerInput) SetPrevious(layer_or_loss ILayer) {
+	panic("Input layer doesn't have a previous layer")
+}
+
+func (layer *LayerInput) SetNext(layer_or_loss ILayer) {
+	layer.Next = layer_or_loss
+}
+
+func (layer *LayerInput) GetOutput() *mat.Dense {
+	return layer.Output
+}
+
+func (layer *LayerInput) GetPreviousOutput() *mat.Dense {
+	panic("Input layer doesn't have a previous layer")
+}
+
+func (layer *LayerInput) GetNext() ILayer {
+	return layer.Next
+}
+
+func (layer *LayerInput) GetDInputs() *mat.Dense {
+	panic("Input layer doesn't have any dinputs")
 }

@@ -6,8 +6,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type Loss interface {
+type ILoss interface {
 	Forward(y_pred *mat.Dense, y_true *mat.Dense) *mat.Dense
+	Backward(dvalues *mat.Dense, y_true *mat.Dense)
+	GetDInputs() *mat.Dense
 }
 
 type Loss_CategoricalCrossentropy struct {
@@ -44,7 +46,11 @@ func (loss *Loss_CategoricalCrossentropy) Backward(dvalues *mat.Dense, y_true *m
 	}, loss.Dinputs)
 }
 
-func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
+func (loss *Loss_CategoricalCrossentropy) GetDInputs() *mat.Dense {
+	return loss.Dinputs
+}
+
+func CalculateLoss(loss ILoss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	data_loss := 0.0
 	sample_losses := loss.Forward(y_pred, y_true)
 	sample_losses.Apply(func(r, c int, v float64) float64 {
@@ -55,7 +61,7 @@ func CalculateLoss(loss Loss, y_pred *mat.Dense, y_true *mat.Dense) float64 {
 	return data_loss
 }
 
-func RegularizationLoss(loss Loss, layer *LayerDense) float64 {
+func RegularizationLoss(loss ILoss, layer *LayerDense) float64 {
 	regularization_loss := 0.0
 	//l1 stuff
 	if layer.Weight_Regulizer_L1 > 0 {
@@ -149,6 +155,10 @@ func (loss *Loss_BinaryCrossentropy) Backward(dvalues *mat.Dense, y_true *mat.De
 
 }
 
+func (loss *Loss_BinaryCrossentropy) GetDInputs() *mat.Dense {
+	return loss.Dinputs
+}
+
 type Loss_MSE struct {
 	Dinputs *mat.Dense
 }
@@ -188,6 +198,11 @@ func (loss *Loss_MSE) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
 		return v / samples
 	}, loss.Dinputs)
 }
+
+func (loss *Loss_MSE) GetDInputs() *mat.Dense {
+	return loss.Dinputs
+}
+
 func clip(value, left, right float64) float64 {
 	if value >= left && value <= right {
 		return value
