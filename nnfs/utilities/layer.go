@@ -12,7 +12,7 @@ type ILayer interface {
 	SetPrevious(layer_or_loss ILayer)
 	SetNext(layer_or_loss ILayer)
 	GetOutput() *mat.Dense
-	GetPreviousOutput() *mat.Dense //TODO: Refactor this, make it just GetPrevious()
+	GetPrevious() ILayer
 	GetNext() ILayer
 	GetDInputs() *mat.Dense
 }
@@ -105,8 +105,8 @@ func (layer *LayerDense) GetOutput() *mat.Dense {
 	return layer.Output
 }
 
-func (layer *LayerDense) GetPreviousOutput() *mat.Dense {
-	return layer.Prev.GetOutput()
+func (layer *LayerDense) GetPrevious() ILayer {
+	return layer.Prev
 }
 
 func (layer *LayerDense) GetNext() ILayer {
@@ -159,8 +159,8 @@ func (layer *LayerDropout) GetOutput() *mat.Dense {
 	return layer.Output
 }
 
-func (layer *LayerDropout) GetPreviousOutput() *mat.Dense {
-	return layer.Prev.GetOutput()
+func (layer *LayerDropout) GetPrevious() ILayer {
+	return layer.Prev
 }
 
 func (layer *LayerDropout) GetNext() ILayer {
@@ -204,7 +204,7 @@ func (layer *LayerInput) GetOutput() *mat.Dense {
 	return layer.Output
 }
 
-func (layer *LayerInput) GetPreviousOutput() *mat.Dense {
+func (layer *LayerInput) GetPrevious() ILayer {
 	panic("Input layer doesn't have a previous layer")
 }
 

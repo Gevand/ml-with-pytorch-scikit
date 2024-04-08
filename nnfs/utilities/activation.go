@@ -54,8 +54,8 @@ func (activation *ActivationRelu) GetOutput() *mat.Dense {
 	return activation.Output
 }
 
-func (activation *ActivationRelu) GetPreviousOutput() *mat.Dense {
-	return activation.Prev.GetOutput()
+func (activation *ActivationRelu) GetPrevious() ILayer {
+	return activation.Prev
 }
 
 func (activation *ActivationRelu) GetNext() ILayer {
@@ -228,8 +228,8 @@ func (activation *ActivationLinear) GetOutput() *mat.Dense {
 	return activation.Output
 }
 
-func (activation *ActivationLinear) GetPreviousOutput() *mat.Dense {
-	return activation.Prev.GetOutput()
+func (activation *ActivationLinear) GetPrevious() ILayer {
+	return activation.Prev
 }
 
 func (activation *ActivationLinear) GetNext() ILayer {

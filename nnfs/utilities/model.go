@@ -52,7 +52,7 @@ func (model *Model) Forward(X *mat.Dense) *mat.Dense {
 	model.InputLayer.Forward(X)
 
 	for _, layer := range model.Layers {
-		layer.Forward(layer.GetPreviousOutput())
+		layer.Forward(layer.GetPrevious().GetOutput())
 	}
 
 	return model.Layers[len(model.Layers)-1].GetOutput()
