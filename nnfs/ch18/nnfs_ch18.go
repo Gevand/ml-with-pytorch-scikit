@@ -9,6 +9,7 @@ func Run1() {
 	fmt.Println("Building a model object")
 	X, y := u.Create_data(10)
 	model := u.NewModel()
+	model.Accuracy = u.NewAccuracy_Regression(0, true, y)
 	model.Add(u.NewLayerDense(1, 64))
 	model.Add(u.NewActivationRelu())
 	model.Add(u.NewLayerDense(64, 64))

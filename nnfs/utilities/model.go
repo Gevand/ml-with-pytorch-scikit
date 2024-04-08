@@ -1,6 +1,8 @@
 package nnfs
 
 import (
+	"fmt"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -9,6 +11,8 @@ type Model struct {
 	InputLayer ILayer
 	Loss       ILoss
 	Optimizer  IOptimizer
+	Data_Loss  float64
+	Accuracy   IAccuracy
 }
 
 func NewModel() *Model {
@@ -41,8 +45,19 @@ func (model *Model) Train(X, y *mat.Dense, epochs, print_every int) {
 				model.Optimizer.UpdateParameters(v)
 			}
 		}
-		//TODO: Handle print every stuff
-
+		if i%print_every == 0 {
+			regularization_loss := 0.0
+			for _, layer := range model.Layers {
+				//TODO: also make this better
+				switch v := layer.(type) {
+				case *LayerDense:
+					regularization_loss += RegularizationLoss(model.Loss, v)
+				}
+			}
+			loss := model.Data_Loss + regularization_loss
+			accuracy := model.Accuracy.Compare(output, y)
+			fmt.Println("epoch", i, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "accuracy -->", accuracy, "%")
+		}
 		model.Optimizer.PostUpdateParams()
 	}
 }
@@ -59,7 +74,7 @@ func (model *Model) Forward(X *mat.Dense) *mat.Dense {
 }
 
 func (model *Model) Backward(output, y *mat.Dense) {
-	CalculateLoss(model.Loss, output, y)
+	model.Data_Loss = CalculateLoss(model.Loss, output, y)
 	model.Loss.Backward(output, y)
 	for i := len(model.Layers) - 1; i >= 0; i-- {
 		layer := model.Layers[i]
