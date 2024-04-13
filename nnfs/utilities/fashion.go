@@ -137,8 +137,8 @@ func imageToRGB(img image.Image) []float64 {
 	idx := 0
 	for y := sz.Min.Y; y < sz.Max.Y; y++ {
 		for x := sz.Min.X; x < sz.Max.X; x++ {
-			r, g, b, _ := img.At(x, y).RGBA()
-			raw[idx] = float64((uint8(r) + uint8(g) + uint8(b)) / 3.0)
+			r, _, _, _ := img.At(x, y).RGBA()
+			raw[idx] = float64(uint(r))
 			idx += 1
 		}
 	}
