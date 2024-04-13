@@ -3,15 +3,26 @@ package nnfs
 import (
 	"archive/zip"
 	"fmt"
+	"image"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 func Init() {
+	//skip all this if the folder exists
+	_, err := os.Stat("fashion_mnist_images")
+	if err == nil {
+		fmt.Println("You already have the file")
+		return
+	}
+
 	url := "https://nnfs.io/datasets/fashion_mnist_images.zip"
 	resp, err := http.Get(url)
 
@@ -40,7 +51,10 @@ func Init() {
 		return
 	}
 
-	unzip("fashion_mnist_images.zip", "fashion_mnist_images")
+	err = unzip("fashion_mnist_images.zip", "fashion_mnist_images")
+	if err != nil {
+		fmt.Println("Sorry couldn't unzip, do it manually :D", err)
+	}
 
 }
 
@@ -86,4 +100,47 @@ func unzip(src, dest string) error {
 		}
 	}
 	return nil
+}
+
+func Create_fashion_data(is_test bool) ([]*mat.Dense, *mat.Dense) {
+
+	directory := "test"
+	if !is_test {
+		directory = "train"
+	}
+
+	var X = []*mat.Dense{}
+	label_raw := []float64{}
+
+	dirs, _ := os.ReadDir(filepath.Join("fashion_mnist_images", directory))
+	for _, dir := range dirs {
+		label := dir.Name()
+		photos, _ := os.ReadDir(filepath.Join("fashion_mnist_images", directory, label))
+
+		for _, photo := range photos {
+			val, _ := strconv.ParseFloat(label, 64)
+			label_raw = append(label_raw, val)
+			image_file, _ := os.Open(filepath.Join("fashion_mnist_images", directory, label, photo.Name()))
+			defer image_file.Close()
+			img_raw_data, _, _ := image.Decode(image_file)
+			x := mat.NewDense(28, 28, imageToRGB(img_raw_data))
+			X = append(X, x)
+		}
+	}
+	var y = mat.NewDense(len(label_raw), 1, label_raw)
+	return X, y
+}
+
+func imageToRGB(img image.Image) []float64 {
+	sz := img.Bounds()
+	raw := make([]float64, 28*28)
+	idx := 0
+	for y := sz.Min.Y; y < sz.Max.Y; y++ {
+		for x := sz.Min.X; x < sz.Max.X; x++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+			raw[idx] = float64((uint8(r) + uint8(g) + uint8(b)) / 3.0)
+			idx += 1
+		}
+	}
+	return raw
 }
