@@ -5,9 +5,9 @@ import (
 	"image"
 	u "nnfs/utilities"
 
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/canvas"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -15,17 +15,44 @@ func Run1() {
 	fmt.Println("Fashion data set")
 	u.Init()
 	X, y := u.Create_fashion_data(true)
-	fmt.Println(X[0])
+	fmt.Println(X[1000*7+2])
 	fmt.Println(y.At(0, 0))
 
 	a := app.New()
 	w := a.NewWindow("Images")
 
-	img := canvas.NewImageFromImage(generateImage(X[0]))
+	img := canvas.NewImageFromImage(generateImage(X[1000*7+2]))
 	w.SetContent(img)
 	w.Resize(fyne.NewSize(640, 480))
 
 	w.ShowAndRun()
+}
+
+func Run2() {
+	fmt.Println("Data prep")
+	X, y := u.Create_fashion_data(true)
+	u.Shuffle(X, y)
+	u.Scale_fashion_data(X)
+	X_reshape := u.Reshape_fashion_data(X)
+	fmt.Println(X[0], y.At(0, 0))
+	fmt.Println(X_reshape[0], y.At(0, 0))
+
+	EPOCHS := 10
+	BATCH_SIZE := 128
+
+	steps := len(X_reshape) / BATCH_SIZE
+	if steps*BATCH_SIZE < len(X_reshape) {
+		steps += 1
+	}
+
+	for epoch := 0; epoch < EPOCHS; epoch++ {
+		for step := 0; step < steps; step++ {
+			batch_X := X_reshape[step*BATCH_SIZE : (step+1)*BATCH_SIZE]
+			batch_Y := mat.NewDense(BATCH_SIZE, 1, y.RawMatrix().Data[step*BATCH_SIZE:(step+1)*BATCH_SIZE])
+
+			fmt.Println(len(batch_X), len(batch_Y.RawMatrix().Data))
+		}
+	}
 }
 
 func generateImage(dense *mat.Dense) image.Image {

@@ -131,6 +131,23 @@ func Create_fashion_data(is_test bool) ([]*mat.Dense, *mat.Dense) {
 	return X, y
 }
 
+func Scale_fashion_data(X []*mat.Dense) {
+	for _, data := range X {
+		data.Apply(func(r, c int, v float64) float64 {
+			return (v - 127.5) / 127.5
+		}, data)
+	}
+}
+
+func Reshape_fashion_data(X []*mat.Dense) []*mat.Dense {
+	var result = []*mat.Dense{}
+	for _, data := range X {
+		temp := mat.NewDense(28*28, 1, data.RawMatrix().Data)
+		result = append(result, temp)
+	}
+	return result
+}
+
 func imageToRGB(img image.Image) []float64 {
 	sz := img.Bounds()
 	raw := make([]float64, 28*28)
@@ -138,7 +155,7 @@ func imageToRGB(img image.Image) []float64 {
 	for y := sz.Min.Y; y < sz.Max.Y; y++ {
 		for x := sz.Min.X; x < sz.Max.X; x++ {
 			r, _, _, _ := img.At(x, y).RGBA()
-			raw[idx] = float64(uint(r))
+			raw[idx] = float64(uint8(r))
 			idx += 1
 		}
 	}

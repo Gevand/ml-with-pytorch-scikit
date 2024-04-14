@@ -75,6 +75,19 @@ func SumAxis0KeepDimsTrue(input *mat.Dense) *mat.Dense {
 	return ouput
 }
 
+func Shuffle(X []*mat.Dense, y *mat.Dense) {
+	if y.RawMatrix().Rows != len(X) {
+		panic("Mismatch of sizes, X's length and y's row count should match")
+	}
+
+	rand.Shuffle(len(X), func(i, j int) {
+		X[i], X[j] = X[j], X[i]
+		temp := y.At(i, 0)
+		y.Set(i, 0, y.At(j, 0))
+		y.Set(j, 0, temp)
+	})
+}
+
 func Binomial(number_of_experiments int, probability float64, size int) []float64 {
 	output := make([]float64, size)
 	experiment := 0
