@@ -67,8 +67,9 @@ func (activation *ActivationRelu) GetDInputs() *mat.Dense {
 }
 
 type ActivationSoftMax struct {
-	Output  *mat.Dense
-	Dinputs *mat.Dense
+	Output     *mat.Dense
+	Dinputs    *mat.Dense
+	Prev, Next ILayer
 }
 
 func NewActivationSoftMax() *ActivationSoftMax {
@@ -120,7 +121,7 @@ func (activation *ActivationSoftMax) Backward(dvalues *mat.Dense) {
 	for i := 0; i < activation.Output.RawMatrix().Rows; i++ {
 		single_dvalues := mat.NewDense(1, activation.Output.RawMatrix().Cols, dvalues.RawRowView(i))
 		single_output := mat.NewDense(1, activation.Output.RawMatrix().Cols, activation.Output.RawRowView(i))
-		single_output_dot := mat.NewDense(3, 3, nil)
+		single_output_dot := mat.NewDense(single_output.RawMatrix().Cols, single_output.RawMatrix().Cols, nil)
 		single_output_dot.Mul(single_output.T(), single_output)
 
 		//intialized as a diagnal matrix with the single_output being the diagnal
@@ -135,6 +136,30 @@ func (activation *ActivationSoftMax) Backward(dvalues *mat.Dense) {
 		dinputs_temp.Mul(jacobian_matrix, single_dvalues.T())
 		activation.Dinputs.SetRow(i, dinputs_temp.RawMatrix().Data)
 	}
+}
+
+func (activation *ActivationSoftMax) GetDInputs() *mat.Dense {
+	return activation.Dinputs
+}
+
+func (activation *ActivationSoftMax) GetNext() ILayer {
+	return activation.Next
+}
+
+func (activation *ActivationSoftMax) GetPrevious() ILayer {
+	return activation.Prev
+}
+
+func (activation *ActivationSoftMax) SetPrevious(layer_or_loss ILayer) {
+	activation.Prev = layer_or_loss
+}
+
+func (activation *ActivationSoftMax) SetNext(layer_or_loss ILayer) {
+	activation.Next = layer_or_loss
+}
+
+func (activation *ActivationSoftMax) GetOutput() *mat.Dense {
+	return activation.Output
 }
 
 type ActivationSoftMaxLossCategoricalCrossEntropy struct {

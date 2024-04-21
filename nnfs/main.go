@@ -110,5 +110,6 @@ func ch18() {
 
 func ch19() {
 	//nnfsch19.Run1()
-	nnfsch19.Run2()
+	//nnfsch19.Run2()
+	nnfsch19.Run3()
 }

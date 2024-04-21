@@ -102,7 +102,7 @@ func unzip(src, dest string) error {
 	return nil
 }
 
-func Create_fashion_data(is_test bool) ([]*mat.Dense, *mat.Dense) {
+func Create_fashion_data(is_test bool) ([]*mat.Dense, []*mat.Dense) {
 
 	directory := "test"
 	if !is_test {
@@ -110,7 +110,7 @@ func Create_fashion_data(is_test bool) ([]*mat.Dense, *mat.Dense) {
 	}
 
 	var X = []*mat.Dense{}
-	label_raw := []float64{}
+	var y = []*mat.Dense{}
 
 	dirs, _ := os.ReadDir(filepath.Join("fashion_mnist_images", directory))
 	for _, dir := range dirs {
@@ -118,16 +118,19 @@ func Create_fashion_data(is_test bool) ([]*mat.Dense, *mat.Dense) {
 		photos, _ := os.ReadDir(filepath.Join("fashion_mnist_images", directory, label))
 
 		for _, photo := range photos {
-			val, _ := strconv.ParseFloat(label, 64)
-			label_raw = append(label_raw, val)
+			val, _ := strconv.ParseInt(label, 10, 64)
 			image_file, _ := os.Open(filepath.Join("fashion_mnist_images", directory, label, photo.Name()))
 			defer image_file.Close()
 			img_raw_data, _, _ := image.Decode(image_file)
 			x := mat.NewDense(28, 28, imageToRGB(img_raw_data))
+			raw_data := make([]float64, 10)
+			raw_data[val] = 1.0
+			y_one_hot := mat.NewDense(1, 10, raw_data)
 			X = append(X, x)
+			y = append(y, y_one_hot)
 		}
 	}
-	var y = mat.NewDense(len(label_raw), 1, label_raw)
+
 	return X, y
 }
 
@@ -142,7 +145,7 @@ func Scale_fashion_data(X []*mat.Dense) {
 func Reshape_fashion_data(X []*mat.Dense) []*mat.Dense {
 	var result = []*mat.Dense{}
 	for _, data := range X {
-		temp := mat.NewDense(28*28, 1, data.RawMatrix().Data)
+		temp := mat.NewDense(1, 28*28, data.RawMatrix().Data)
 		result = append(result, temp)
 	}
 	return result

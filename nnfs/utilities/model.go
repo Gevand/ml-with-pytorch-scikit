@@ -62,6 +62,43 @@ func (model *Model) Train(X, y *mat.Dense, epochs, print_every int) {
 	}
 }
 
+func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, print_every int) {
+	if print_every <= 0 {
+		panic("print_every can't be 0 or negative, make it 1 bro")
+	}
+	for epoch := 1; epoch <= epochs; epoch++ {
+		for image := 0; image < len(X); image++ {
+			output := model.Forward(X[0])
+			y_for_pic := y[0]
+			model.Backward(output, y_for_pic)
+
+			model.Optimizer.PreUpdateParams()
+
+			for _, layer := range model.Layers {
+				//TODO: make this better
+				switch v := layer.(type) {
+				case *LayerDense:
+					model.Optimizer.UpdateParameters(v)
+				}
+			}
+			model.Optimizer.PostUpdateParams()
+		}
+		if epoch%print_every == 0 {
+			regularization_loss := 0.0
+			for _, layer := range model.Layers {
+				//TODO: also make this better
+				switch v := layer.(type) {
+				case *LayerDense:
+					regularization_loss += RegularizationLoss(model.Loss, v)
+				}
+			}
+			loss := model.Data_Loss + regularization_loss
+			//accuracy := model.Accuracy.Compare(output, y_for_pic)
+			fmt.Println("epoch", epoch, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss)
+		}
+	}
+}
+
 func (model *Model) Forward(X *mat.Dense) *mat.Dense {
 
 	model.InputLayer.Forward(X)

@@ -16,7 +16,7 @@ func Run1() {
 	u.Init()
 	X, y := u.Create_fashion_data(true)
 	fmt.Println(X[1000*7+2])
-	fmt.Println(y.At(0, 0))
+	fmt.Println(y[0])
 
 	a := app.New()
 	w := a.NewWindow("Images")
@@ -34,8 +34,8 @@ func Run2() {
 	u.Shuffle(X, y)
 	u.Scale_fashion_data(X)
 	X_reshape := u.Reshape_fashion_data(X)
-	fmt.Println(X[0], y.At(0, 0))
-	fmt.Println(X_reshape[0], y.At(0, 0))
+	fmt.Println(X[0], y[0])
+	fmt.Println(X_reshape[0], y[0])
 
 	EPOCHS := 10
 	BATCH_SIZE := 128
@@ -48,11 +48,29 @@ func Run2() {
 	for epoch := 0; epoch < EPOCHS; epoch++ {
 		for step := 0; step < steps; step++ {
 			batch_X := X_reshape[step*BATCH_SIZE : (step+1)*BATCH_SIZE]
-			batch_Y := mat.NewDense(BATCH_SIZE, 1, y.RawMatrix().Data[step*BATCH_SIZE:(step+1)*BATCH_SIZE])
+			batch_Y := y[step*BATCH_SIZE : (step+1)*BATCH_SIZE]
 
-			fmt.Println(len(batch_X), len(batch_Y.RawMatrix().Data))
+			fmt.Println(len(batch_X), len(batch_Y))
 		}
 	}
+}
+func Run3() {
+	fmt.Println("Training images")
+	X, y := u.Create_fashion_data(true)
+	u.Shuffle(X, y)
+	u.Scale_fashion_data(X)
+	X_reshape := u.Reshape_fashion_data(X)
+
+	model := u.NewModel()
+	model.Add(u.NewLayerDense(28*28, 128))
+	model.Add(u.NewActivationRelu())
+	model.Add(u.NewLayerDense(128, 128))
+	model.Add(u.NewActivationRelu())
+	model.Add(u.NewLayerDense(128, 10))
+	model.Add(u.NewActivationSoftMax())
+	model.Set(u.NewLoss_CategoricalCrossentropy(), u.NewOptimizerAdam(0.005, 1e-3, 1e-7, 0.9, 0.999))
+	model.Finalize()
+	model.Train_image(X_reshape, y, 5, 1)
 }
 
 func generateImage(dense *mat.Dense) image.Image {
