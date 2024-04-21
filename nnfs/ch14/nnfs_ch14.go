@@ -37,7 +37,7 @@ func Run1() {
 
 	loss_activation := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
 	dense_2.Forward(activation_1.Output)
-	data_loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+	data_loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 	loss := data_loss + u.RegularizationLoss(loss_activation.Loss, dense_1) + u.RegularizationLoss(loss_activation.Loss, dense_2)
 	accuracy := u.Accuracy(loss_activation.Activation.Output, y_one_hot)
 	fmt.Println("data loss:", data_loss, "loss:", loss, "accuracy:", accuracy)
@@ -102,7 +102,7 @@ func Run3() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		data_loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		data_loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 		regularization_loss := u.RegularizationLoss(loss_activation.Loss, dense_1) + u.RegularizationLoss(loss_activation.Loss, dense_2)
 		loss := data_loss + regularization_loss
 		if i%1 == 0 {
@@ -112,7 +112,7 @@ func Run3() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)

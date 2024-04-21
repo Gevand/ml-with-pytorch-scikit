@@ -33,7 +33,7 @@ func (model *Model) Train(X, y *mat.Dense, epochs, print_every int) {
 		panic("print_every can't be 0 or negative, make it 1 bro")
 	}
 	for i := 1; i <= epochs; i++ {
-		output := model.Forward(X)
+		output := model.Forward(X, y)
 		model.Backward(output, y)
 
 		model.Optimizer.PreUpdateParams()
@@ -56,69 +56,99 @@ func (model *Model) Train(X, y *mat.Dense, epochs, print_every int) {
 			}
 			loss := model.Data_Loss + regularization_loss
 			accuracy := model.Accuracy.Compare(output, y)
-			fmt.Println("epoch", i, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "accuracy -->", accuracy, "%")
+			fmt.Println("epoch", i, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "lr -->", model.Optimizer.GetLearningRate(), "accuracy -->", accuracy, "%")
 		}
 		model.Optimizer.PostUpdateParams()
 	}
 }
 
-func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, print_every int) {
+func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, batch_size, print_every int) {
 	if print_every <= 0 {
 		panic("print_every can't be 0 or negative, make it 1 bro")
 	}
+
+	if batch_size < 0 {
+		panic("batch_size can't be 0 or negative, make it 1 bro")
+	}
+
+	steps := len(X) / batch_size
+	if steps*batch_size < len(X) {
+		steps += 1
+	}
 	for epoch := 1; epoch <= epochs; epoch++ {
-		for image := 0; image < len(X); image++ {
-			output := model.Forward(X[0])
-			y_for_pic := y[0]
-			model.Backward(output, y_for_pic)
+		for step := 0; step < steps; step++ {
+			batch_x_raw := []float64{}
+			batch_y_raw := []float64{}
+
+			if step > 5 {
+				break
+			}
+			start := step * batch_size
+			end := (step + 1) * batch_size
+			if end > len(X) {
+				end = len(X)
+			}
+			for i, x := range X[start:end] {
+				batch_x_raw = append(batch_x_raw, x.RawMatrix().Data...)
+				batch_y_raw = append(batch_y_raw, y[i].RawMatrix().Data...)
+			}
+
+			batch_x := mat.NewDense(end-start, X[0].RawMatrix().Cols, batch_x_raw)
+			batch_y := mat.NewDense(end-start, y[0].RawMatrix().Cols, batch_y_raw)
+
+			output := model.Forward(batch_x, batch_y)
+			model.Backward(output, batch_y)
 
 			model.Optimizer.PreUpdateParams()
 
 			for _, layer := range model.Layers {
-				//TODO: make this better
 				switch v := layer.(type) {
 				case *LayerDense:
 					model.Optimizer.UpdateParameters(v)
 				}
 			}
+			if step%print_every == 0 {
+				regularization_loss := 0.0
+				for _, layer := range model.Layers {
+					switch v := layer.(type) {
+					case *LayerDense:
+						regularization_loss += RegularizationLoss(model.Loss, v)
+					}
+				}
+				loss := model.Data_Loss + regularization_loss
+				accuracy := model.Accuracy.Compare(output, batch_y)
+				fmt.Println("step", step, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "lr -->", model.Optimizer.GetLearningRate(), "accuracy -->", accuracy, "%")
+			}
 			model.Optimizer.PostUpdateParams()
 		}
-		if epoch%print_every == 0 {
-			regularization_loss := 0.0
-			for _, layer := range model.Layers {
-				//TODO: also make this better
-				switch v := layer.(type) {
-				case *LayerDense:
-					regularization_loss += RegularizationLoss(model.Loss, v)
-				}
-			}
-			loss := model.Data_Loss + regularization_loss
-			//accuracy := model.Accuracy.Compare(output, y_for_pic)
-			fmt.Println("epoch", epoch, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss)
-		}
+
 	}
 }
 
-func (model *Model) Forward(X *mat.Dense) *mat.Dense {
+func (model *Model) Forward(X, y_true *mat.Dense) *mat.Dense {
 
 	model.InputLayer.Forward(X)
-
 	for _, layer := range model.Layers {
-		layer.Forward(layer.GetPrevious().GetOutput())
+		switch v := layer.(type) {
+		case *ActivationSoftMaxLossCategoricalCrossEntropy:
+			model.Data_Loss = v.ForwardCombined(v.GetPrevious().GetOutput(), y_true)
+		default:
+			v.Forward(layer.GetPrevious().GetOutput())
+		}
 	}
-
+	//
 	return model.Layers[len(model.Layers)-1].GetOutput()
 }
 
 func (model *Model) Backward(output, y *mat.Dense) {
-	model.Data_Loss = CalculateLoss(model.Loss, output, y)
-	model.Loss.Backward(output, y)
 	for i := len(model.Layers) - 1; i >= 0; i-- {
+
 		layer := model.Layers[i]
-		if i == len(model.Layers)-1 {
-			layer.Backward(model.Loss.GetDInputs())
-		} else {
-			layer.Backward(layer.GetNext().GetDInputs())
+		switch v := layer.(type) {
+		case *ActivationSoftMaxLossCategoricalCrossEntropy:
+			v.BackwardCombined(output, y)
+		default:
+			v.Backward(v.GetNext().GetDInputs())
 		}
 	}
 }

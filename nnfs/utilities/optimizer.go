@@ -11,6 +11,7 @@ type IOptimizer interface {
 	PreUpdateParams()
 	UpdateParameters(layer *LayerDense)
 	PostUpdateParams()
+	GetLearningRate() float64
 }
 
 type OptimizerSGD struct {
@@ -23,6 +24,8 @@ func NewOptimizerSGD(lr, decay, momentum float64) *OptimizerSGD {
 	output := &OptimizerSGD{LearningRate: lr, Decay: decay, CurrentLearningRate: lr, Momentum: momentum}
 	return output
 }
+
+func (optimizer *OptimizerSGD) GetLearningRate() float64 { return optimizer.CurrentLearningRate }
 
 func (optimizer *OptimizerSGD) PreUpdateParams() {
 	if optimizer.Decay > 0 {
@@ -79,7 +82,7 @@ func NewOptimizerAdaGrad(lr, decay, eps float64) *OptimizerAdaGrad {
 	output := &OptimizerAdaGrad{LearningRate: lr, Decay: decay, CurrentLearningRate: lr, Epsilon: eps}
 	return output
 }
-
+func (optimizer *OptimizerAdaGrad) GetLearningRate() float64 { return optimizer.CurrentLearningRate }
 func (optimizer *OptimizerAdaGrad) PreUpdateParams() {
 	if optimizer.Decay > 0 {
 		optimizer.CurrentLearningRate = optimizer.LearningRate * (1. / (1 + optimizer.Decay*float64(optimizer.Iterations)))
@@ -131,6 +134,7 @@ func NewOptimizerRmsProp(lr, decay, eps, rho float64) *OptimizerRmsProp {
 	output := &OptimizerRmsProp{LearningRate: lr, Decay: decay, CurrentLearningRate: lr, Epsilon: eps, Rho: rho}
 	return output
 }
+func (optimizer *OptimizerRmsProp) GetLearningRate() float64 { return optimizer.CurrentLearningRate }
 
 func (optimizer *OptimizerRmsProp) PreUpdateParams() {
 	if optimizer.Decay > 0 {
@@ -188,6 +192,8 @@ func (optimizer *OptimizerAdam) PreUpdateParams() {
 		optimizer.CurrentLearningRate = optimizer.LearningRate * (1. / (1 + optimizer.Decay*float64(optimizer.Iterations)))
 	}
 }
+
+func (optimizer *OptimizerAdam) GetLearningRate() float64 { return optimizer.CurrentLearningRate }
 
 func (optimizer *OptimizerAdam) UpdateParameters(layer *LayerDense) {
 	if layer.Weight_Cache == nil {

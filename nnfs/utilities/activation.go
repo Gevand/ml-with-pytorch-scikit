@@ -174,21 +174,53 @@ func NewActivationSoftMaxLossCategoricalCrossEntropy() *ActivationSoftMaxLossCat
 	return output
 }
 
-func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Forward(input *mat.Dense, y_true *mat.Dense) float64 {
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Forward(input *mat.Dense) {
+	panic("Never call this")
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) ForwardCombined(input *mat.Dense, y_true *mat.Dense) float64 {
 	combine.Activation.Forward(input)
 	return CalculateLoss(combine.Loss, combine.Activation.Output, y_true)
 }
 
-func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Backward(dvalues *mat.Dense, y_true *mat.Dense) {
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) Backward(dvalues *mat.Dense) {
+	panic("Never call this")
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) BackwardCombined(dvalues *mat.Dense, y_true *mat.Dense) {
 	//y prediction - y true
 	//since y true is one hot encoded, we subract 1 or 0
 	combine.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
 	combine.Dinputs.Sub(dvalues, y_true)
 	//normalize
-	samples := float64(y_true.RawMatrix().Cols)
+	samples := float64(y_true.RawMatrix().Rows)
 	combine.Dinputs.Apply(func(r, c int, v float64) float64 {
 		return v / samples
 	}, combine.Dinputs)
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetDInputs() *mat.Dense {
+	return combine.Dinputs
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetNext() ILayer {
+	return combine.Next
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetPrevious() ILayer {
+	return combine.Prev
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) SetPrevious(layer_or_loss ILayer) {
+	combine.Prev = layer_or_loss
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) SetNext(layer_or_loss ILayer) {
+	combine.Next = layer_or_loss
+}
+
+func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetOutput() *mat.Dense {
+	return combine.Activation.Output
 }
 
 type ActivationSigmoid struct {

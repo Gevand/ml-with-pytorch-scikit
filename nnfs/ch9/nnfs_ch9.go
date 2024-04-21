@@ -308,7 +308,7 @@ func Run11() {
 	}
 
 	soft_max_and_loss := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
-	soft_max_and_loss.Backward(softmax_outputs, class_targets_one_hot)
+	soft_max_and_loss.BackwardCombined(softmax_outputs, class_targets_one_hot)
 	fmt.Println(soft_max_and_loss.Dinputs)
 }
 
@@ -331,12 +331,12 @@ func Run12() {
 	dense_2 := u.NewLayerDense(3, 3)
 	loss_activation := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
 	dense_2.Forward(activation_1.Output)
-	loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+	loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 	accuracy := u.Accuracy(loss_activation.Activation.Output, y_one_hot)
 	fmt.Println("loss:", loss, "accuracy:", accuracy)
 
-	loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+	loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 	dense_2.Backward(loss_activation.Dinputs)
 	activation_1.Backward(dense_2.Dinputs)
 	dense_1.Backward(activation_1.Dinputs)

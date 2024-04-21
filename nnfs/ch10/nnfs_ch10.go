@@ -32,7 +32,7 @@ func Run1() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			fmt.Println("epoch", i, "loss -->", loss)
@@ -41,7 +41,7 @@ func Run1() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)
@@ -74,7 +74,7 @@ func Run2() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			fmt.Println("epoch", i, "loss -->", loss)
@@ -83,7 +83,7 @@ func Run2() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)
@@ -171,7 +171,7 @@ func Run3() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			fmt.Println("epoch", i, "loss -->", loss)
@@ -180,7 +180,7 @@ func Run3() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)
@@ -213,7 +213,7 @@ func Run4() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			fmt.Println("epoch", i, "loss -->", loss)
@@ -222,7 +222,7 @@ func Run4() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)
@@ -310,7 +310,7 @@ func Run5() {
 		activation_1.Forward(dense_1.Output)
 		dense_2.Forward(activation_1.Output)
 
-		loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			fmt.Println("epoch", i, "loss -->", loss)
@@ -319,7 +319,7 @@ func Run5() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		activation_1.Backward(dense_2.Dinputs)
 		dense_1.Backward(activation_1.Dinputs)

@@ -57,7 +57,7 @@ func (accuracy *Accuracy_Classification) Compare(predictions, y *mat.Dense) floa
 	}, predictions)
 	//compare to the truth and add up the 1s
 	predictions.Apply(func(r, c int, v float64) float64 {
-		if v == y.At(r, c) {
+		if v == 1 && v == y.At(r, c) {
 			ac += 1
 		}
 		return v

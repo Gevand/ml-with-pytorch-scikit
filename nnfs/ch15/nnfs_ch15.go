@@ -83,7 +83,7 @@ func Run3() {
 		dropout_1.Forward(activation_1.Output)
 		dense_2.Forward(dropout_1.Output)
 
-		data_loss := loss_activation.Forward(dense_2.Output, y_one_hot)
+		data_loss := loss_activation.ForwardCombined(dense_2.Output, y_one_hot)
 
 		if i%100 == 0 {
 			regularization_loss := u.RegularizationLoss(loss_activation.Loss, dense_1) + u.RegularizationLoss(loss_activation.Loss, dense_2)
@@ -94,7 +94,7 @@ func Run3() {
 		}
 
 		//backward pass
-		loss_activation.Backward(loss_activation.Activation.Output, y_one_hot)
+		loss_activation.BackwardCombined(loss_activation.Activation.Output, y_one_hot)
 		dense_2.Backward(loss_activation.Dinputs)
 		dropout_1.Backward(dense_2.Dinputs)
 		activation_1.Backward(dropout_1.Dinputs)
