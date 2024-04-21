@@ -62,7 +62,7 @@ func Run3() {
 	X_reshape := u.Reshape_fashion_data(X)
 
 	model := u.NewModel()
-	model.Accuracy = u.NewAccuracy_Classification(.7, nil)
+	model.Accuracy = u.NewAccuracy_Classification()
 	model.Add(u.NewLayerDense(28*28, 128))
 	model.Add(u.NewActivationRelu())
 	model.Add(u.NewLayerDense(128, 128))
@@ -70,9 +70,9 @@ func Run3() {
 	model.Add(u.NewLayerDense(128, 10))
 	loss_activation := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
 	model.Add(loss_activation)
-	model.Set(loss_activation.Loss, u.NewOptimizerAdam(0.001, 1e-3, 1e-7, 0.9, 0.999))
+	model.Set(loss_activation.Loss, u.NewOptimizerAdam(0.01, 1e-3, 1e-7, 0.9, 0.999))
 	model.Finalize()
-	model.Train_image(X_reshape, y, 3, 128, 1)
+	model.Train_image(X_reshape, y, 10, 128, 100)
 }
 
 func generateImage(dense *mat.Dense) image.Image {

@@ -12,7 +12,9 @@ class Layer_Dense:
                  weight_regularizer_l1=0, weight_regularizer_l2=0,
                  bias_regularizer_l1=0, bias_regularizer_l2=0):
         # Initialize weights and biases
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+
+        # * np.random.randn(n_inputs, n_neurons)
+        self.weights = 0.01 * np.ones(shape=(n_inputs, n_neurons))
         self.biases = np.zeros((1, n_neurons))
         # Set regularization strength
         self.weight_regularizer_l1 = weight_regularizer_l1
@@ -428,6 +430,8 @@ class Optimizer_Adam:
             bias_momentums_corrected / \
             (np.sqrt(bias_cache_corrected) +
              self.epsilon)
+        print("Bias:", layer.biases, "DBiases:", layer.dbiases, "Bias Momentums:",
+              layer.bias_momentums, "Bias Momentums Corrected:", bias_momentums_corrected)
 
     # Call once after any parameter updates
     def post_update_params(self):
@@ -884,7 +888,7 @@ class Model:
             # Iterate over steps
             for step in range(train_steps):
 
-                if step > 3:
+                if step > 1:
                     break
                 # If batch size is not set -
                 # train using one step and full dataset
@@ -1088,10 +1092,10 @@ def create_data_mnist(path):
 X, y, X_test, y_test = create_data_mnist('fashion_mnist_images')
 
 # Shuffle the training dataset
-keys = np.array(range(X.shape[0]))
-np.random.shuffle(keys)
-X = X[keys]
-y = y[keys]
+# keys = np.array(range(X.shape[0]))
+# np.random.shuffle(keys)
+# X = X[keys]
+# y = y[keys]
 
 # Scale and reshape samples
 X = (X.reshape(X.shape[0], -1).astype(np.float32) - 127.5) / 127.5
@@ -1123,5 +1127,5 @@ model.set(
 model.finalize()
 
 # Train the model
-model.train(X, y, validation_data=(X_test, y_test),
-            epochs=3, batch_size=128, print_every=1)
+model.train(X[0:1], np.array([0]), validation_data=(X_test, y_test),
+            epochs=10, batch_size=128, print_every=1)

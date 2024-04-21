@@ -80,9 +80,6 @@ func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, batch_si
 			batch_x_raw := []float64{}
 			batch_y_raw := []float64{}
 
-			if step > 5 {
-				break
-			}
 			start := step * batch_size
 			end := (step + 1) * batch_size
 			if end > len(X) {

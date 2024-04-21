@@ -211,13 +211,13 @@ func (optimizer *OptimizerAdam) UpdateParameters(layer *LayerDense) {
 		return optimizer.Beta1*v + ((1 - optimizer.Beta1) * layer.Dbiases.At(r, c))
 	}, layer.Bias_Momentums)
 
-	weight_momentums_corrected := mat.NewDense(layer.Weight_Momentums.RawMatrix().Rows, layer.Weight_Momentums.RawMatrix().Cols, layer.Weight_Momentums.RawMatrix().Data)
+	weight_momentums_corrected := mat.NewDense(layer.Weight_Momentums.RawMatrix().Rows, layer.Weight_Momentums.RawMatrix().Cols, nil)
 	correction := 1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations+1))
 	weight_momentums_corrected.Apply(func(r, c int, v float64) float64 {
 		return layer.Weight_Momentums.At(r, c) / correction
 	}, weight_momentums_corrected)
 
-	bias_momentums_corrected := mat.NewDense(layer.Bias_Momentums.RawMatrix().Rows, layer.Bias_Momentums.RawMatrix().Cols, layer.Bias_Momentums.RawMatrix().Data)
+	bias_momentums_corrected := mat.NewDense(layer.Bias_Momentums.RawMatrix().Rows, layer.Bias_Momentums.RawMatrix().Cols, nil)
 	bias_momentums_corrected.Apply(func(r, c int, v float64) float64 {
 		return layer.Bias_Momentums.At(r, c) / correction
 	}, bias_momentums_corrected)

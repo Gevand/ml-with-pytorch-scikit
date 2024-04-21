@@ -37,31 +37,32 @@ func (accuracy *Accuracy_Regression) Compare(predictions, y *mat.Dense) float64 
 }
 
 type Accuracy_Classification struct {
-	threshold float64
-	y         *mat.Dense
 }
 
-func NewAccuracy_Classification(threshold float64, y *mat.Dense) *Accuracy_Classification {
-	accuracy := &Accuracy_Classification{threshold: threshold, y: y}
+func NewAccuracy_Classification() *Accuracy_Classification {
+	accuracy := &Accuracy_Classification{}
 	return accuracy
 }
 
-func (accuracy *Accuracy_Classification) Compare(predictions, y *mat.Dense) float64 {
-	ac := 0.0
-	//turn all the flots into 0s or 1s
-	predictions.Apply(func(r, c int, v float64) float64 {
-		if v >= accuracy.threshold {
-			return 1
-		}
-		return 0
-	}, predictions)
-	//compare to the truth and add up the 1s
-	predictions.Apply(func(r, c int, v float64) float64 {
-		if v == 1 && v == y.At(r, c) {
-			ac += 1
-		}
-		return v
-	}, predictions)
-	ac = ac / float64(predictions.RawMatrix().Rows)
-	return ac
+func (accuracy *Accuracy_Classification) Compare(predictions, targets *mat.Dense) float64 {
+	target_copy := mat.DenseCopyOf(targets)
+	predictions_copy := mat.DenseCopyOf(predictions)
+
+	argmax_predictions := mat.NewDense(predictions_copy.RawMatrix().Rows, 1, nil)
+	argmax_targets := mat.NewDense(target_copy.RawMatrix().Rows, 1, nil)
+
+	argmax_predictions.Copy(predictions_copy)
+	target_copy.Copy(argmax_targets)
+
+	for i := 0; i < argmax_predictions.RawMatrix().Rows; i++ {
+		argmax_predictions.Set(i, 0, float64(Argmax(predictions_copy.RawRowView(i))))
+		argmax_targets.Set(i, 0, float64(Argmax(target_copy.RawRowView(i))))
+	}
+
+	comparison := mat.NewDense(argmax_predictions.RawMatrix().Rows, argmax_predictions.RawMatrix().Cols, Compare(argmax_predictions.RawMatrix().Data, argmax_targets.RawMatrix().Data))
+
+	sum := mat.Sum(comparison)
+	mean := sum / float64(argmax_predictions.RawMatrix().Cols*argmax_predictions.RawMatrix().Rows)
+
+	return mean
 }
