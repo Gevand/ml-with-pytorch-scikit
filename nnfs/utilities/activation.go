@@ -134,7 +134,9 @@ func (activation *ActivationSoftMax) Backward(dvalues *mat.Dense) {
 		}, jacobian_matrix)
 		dinputs_temp := mat.NewDense(jacobian_matrix.RawMatrix().Cols, single_dvalues.RawMatrix().Rows, nil)
 		dinputs_temp.Mul(jacobian_matrix, single_dvalues.T())
-		activation.Dinputs.SetRow(i, dinputs_temp.RawMatrix().Data)
+		data := []float64{}
+		data = append(data, dinputs_temp.RawMatrix().Data...)
+		activation.Dinputs.SetRow(i, data)
 	}
 }
 
