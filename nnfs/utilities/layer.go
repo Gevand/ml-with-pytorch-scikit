@@ -1,6 +1,7 @@
 package nnfs
 
 import (
+	"fmt"
 	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
@@ -33,7 +34,7 @@ func NewLayerDense(n_inputs int, n_neurons int) *LayerDense {
 	output := &LayerDense{n_inputs: n_inputs, n_neurons: n_neurons}
 	data := make([]float64, n_inputs*n_neurons)
 	for i := range data {
-		data[i] = rand.NormFloat64() * 0.01
+		data[i] = 0.01 * rand.NormFloat64()
 	}
 	output.Weights = mat.NewDense(n_inputs, n_neurons, data)
 	output.Biases = mat.NewDense(1, n_neurons, nil)
@@ -75,6 +76,9 @@ func (layer *LayerDense) Backward(dvalues *mat.Dense) {
 	}
 
 	layer.Dbiases = SumAxis0KeepDimsTrue(dvalues)
+	if layer.Dbiases.At(0, 0) != 0 {
+		fmt.Println("Dvalues:", dvalues)
+	}
 	if layer.Bias_Regulizer_L1 > 0 {
 		layer.Dbiases.Apply(func(r, c int, v float64) float64 {
 			if layer.Bias_Regulizer_L1 >= 0 {

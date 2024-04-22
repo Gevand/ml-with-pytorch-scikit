@@ -57,7 +57,7 @@ func Run2() {
 func Run3() {
 	fmt.Println("Training images")
 	X, y := u.Create_fashion_data(false)
-	u.Shuffle(X, y)
+	//u.Shuffle(X, y)
 	u.Scale_fashion_data(X)
 	X_reshape := u.Reshape_fashion_data(X)
 
@@ -70,9 +70,9 @@ func Run3() {
 	model.Add(u.NewLayerDense(128, 10))
 	loss_activation := u.NewActivationSoftMaxLossCategoricalCrossEntropy()
 	model.Add(loss_activation)
-	model.Set(loss_activation.Loss, u.NewOptimizerAdam(0.01, 1e-3, 1e-7, 0.9, 0.999))
+	model.Set(loss_activation.Loss, u.NewOptimizerAdam(0.001, 1e-3, 1e-7, 0.9, 0.999))
 	model.Finalize()
-	model.Train_image(X_reshape, y, 10, 128, 100)
+	model.Train_image(X_reshape[0:2], y[0:2], 20, 128, 100)
 }
 
 func generateImage(dense *mat.Dense) image.Image {

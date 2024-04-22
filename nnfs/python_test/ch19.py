@@ -13,8 +13,7 @@ class Layer_Dense:
                  bias_regularizer_l1=0, bias_regularizer_l2=0):
         # Initialize weights and biases
 
-        # * np.random.randn(n_inputs, n_neurons)
-        self.weights = 0.01 * np.ones(shape=(n_inputs, n_neurons))
+        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
         # Set regularization strength
         self.weight_regularizer_l1 = weight_regularizer_l1
@@ -34,7 +33,8 @@ class Layer_Dense:
         # Gradients on parameters
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
-
+        if self.dbiases[0][0] != 0:
+            print("Dvalues:", dvalues)
         # Gradients on regularization
         # L1 on weights
         if self.weight_regularizer_l1 > 0:
@@ -430,8 +430,11 @@ class Optimizer_Adam:
             bias_momentums_corrected / \
             (np.sqrt(bias_cache_corrected) +
              self.epsilon)
-        print("Bias:", layer.biases, "DBiases:", layer.dbiases, "Bias Momentums:",
-              layer.bias_momentums, "Bias Momentums Corrected:", bias_momentums_corrected)
+        if layer.biases[0][0] != 0:
+            print("Bias:", layer.biases)
+            print("DBiases:", layer.dbiases)
+            print("Bias Momentums:", layer.bias_momentums)
+            print("Bias Momentums Corrected:", bias_momentums_corrected)
 
     # Call once after any parameter updates
     def post_update_params(self):
@@ -591,10 +594,13 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
         # Copy so we can safely modify
         self.dinputs = dvalues.copy()
+        print("Dinputs 1:", self.dinputs)
         # Calculate gradient
         self.dinputs[range(samples), y_true] -= 1
+        print("Dinputs 2:", self.dinputs)
         # Normalize gradient
         self.dinputs = self.dinputs / samples
+        print("Dinputs 3:", self.dinputs)
 
 
 # Binary cross-entropy loss
@@ -1060,9 +1066,9 @@ def load_mnist_dataset(dataset, path):
 
     count = 0
     # For each label folder
-    for label in labels:
+    for label in sorted(labels):
         # And for each image in given folder
-        for file in os.listdir(os.path.join(path, dataset, label)):
+        for file in sorted(os.listdir(os.path.join(path, dataset, label))):
             # Read the image
             image = cv2.imread(
                 os.path.join(path, dataset, label, file),
@@ -1127,5 +1133,7 @@ model.set(
 model.finalize()
 
 # Train the model
-model.train(X[0:1], np.array([0]), validation_data=(X_test, y_test),
-            epochs=10, batch_size=128, print_every=1)
+model.train(X[0:2], y[0:2], validation_data=(X_test, y_test),
+            epochs=20, batch_size=128, print_every=1)
+
+print('done')
