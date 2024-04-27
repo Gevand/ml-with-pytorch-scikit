@@ -76,6 +76,7 @@ func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, batch_si
 		steps += 1
 	}
 	for epoch := 1; epoch <= epochs; epoch++ {
+		fmt.Println("Starting on epoch:", epoch)
 		for step := 0; step < steps; step++ {
 			batch_x_raw := []float64{}
 			batch_y_raw := []float64{}
@@ -87,7 +88,7 @@ func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, batch_si
 			}
 			for i, x := range X[start:end] {
 				batch_x_raw = append(batch_x_raw, x.RawMatrix().Data...)
-				batch_y_raw = append(batch_y_raw, y[i].RawMatrix().Data...)
+				batch_y_raw = append(batch_y_raw, y[start+i].RawMatrix().Data...)
 			}
 
 			batch_x := mat.NewDense(end-start, X[0].RawMatrix().Cols, batch_x_raw)
@@ -113,7 +114,7 @@ func (model *Model) Train_image(X []*mat.Dense, y []*mat.Dense, epochs, batch_si
 					}
 				}
 				loss := model.Data_Loss + regularization_loss
-				accuracy := model.Accuracy.Compare(output, batch_y)
+				accuracy := model.Accuracy.Compare(output, batch_y) * 100
 				fmt.Println("step", step, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "lr -->", model.Optimizer.GetLearningRate(), "accuracy -->", accuracy, "%")
 			}
 			model.Optimizer.PostUpdateParams()

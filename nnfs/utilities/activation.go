@@ -1,7 +1,6 @@
 package nnfs
 
 import (
-	"fmt"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -194,15 +193,15 @@ func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) BackwardCombined(dv
 	//y prediction - y true
 	//since y true is one hot encoded, we subract 1 or 0
 	combine.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
-	fmt.Println("Dinputs1", dvalues)
+
 	combine.Dinputs.Sub(dvalues, y_true)
-	fmt.Println("Dinputs2", combine.Dinputs)
+
 	//normalize
 	samples := float64(y_true.RawMatrix().Rows)
 	combine.Dinputs.Apply(func(r, c int, v float64) float64 {
 		return v / samples
 	}, combine.Dinputs)
-	fmt.Println("Dinputs3", combine.Dinputs)
+
 }
 
 func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetDInputs() *mat.Dense {

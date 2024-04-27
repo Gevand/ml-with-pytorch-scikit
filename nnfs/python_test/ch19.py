@@ -12,8 +12,8 @@ class Layer_Dense:
                  weight_regularizer_l1=0, weight_regularizer_l2=0,
                  bias_regularizer_l1=0, bias_regularizer_l2=0):
         # Initialize weights and biases
-
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+
         self.biases = np.zeros((1, n_neurons))
         # Set regularization strength
         self.weight_regularizer_l1 = weight_regularizer_l1
@@ -33,8 +33,7 @@ class Layer_Dense:
         # Gradients on parameters
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
-        if self.dbiases[0][0] != 0:
-            print("Dvalues:", dvalues)
+
         # Gradients on regularization
         # L1 on weights
         if self.weight_regularizer_l1 > 0:
@@ -430,13 +429,9 @@ class Optimizer_Adam:
             bias_momentums_corrected / \
             (np.sqrt(bias_cache_corrected) +
              self.epsilon)
-        if layer.biases[0][0] != 0:
-            print("Bias:", layer.biases)
-            print("DBiases:", layer.dbiases)
-            print("Bias Momentums:", layer.bias_momentums)
-            print("Bias Momentums Corrected:", bias_momentums_corrected)
 
     # Call once after any parameter updates
+
     def post_update_params(self):
         self.iterations += 1
 
@@ -594,13 +589,12 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
         # Copy so we can safely modify
         self.dinputs = dvalues.copy()
-        print("Dinputs 1:", self.dinputs)
+
         # Calculate gradient
         self.dinputs[range(samples), y_true] -= 1
-        print("Dinputs 2:", self.dinputs)
+
         # Normalize gradient
         self.dinputs = self.dinputs / samples
-        print("Dinputs 3:", self.dinputs)
 
 
 # Binary cross-entropy loss
@@ -894,8 +888,6 @@ class Model:
             # Iterate over steps
             for step in range(train_steps):
 
-                if step > 1:
-                    break
                 # If batch size is not set -
                 # train using one step and full dataset
                 if batch_size is None:
@@ -934,10 +926,10 @@ class Model:
                 # Print a summary
                 if not step % print_every or step == train_steps - 1:
                     print(f'step: {step}, ' +
-                          f'acc: {accuracy:.3f}, ' +
-                          f'loss: {loss:.3f} (' +
-                          f'data_loss: {data_loss:.3f}, ' +
-                          f'reg_loss: {regularization_loss:.3f}), ' +
+                          f'acc: {accuracy:.5f}, ' +
+                          f'loss: {loss} (' +
+                          f'data_loss: {data_loss:.5f}, ' +
+                          f'reg_loss: {regularization_loss:.5f}), ' +
                           f'lr: {self.optimizer.current_learning_rate}')
 
             # Get and print epoch loss and accuracy
@@ -1133,7 +1125,7 @@ model.set(
 model.finalize()
 
 # Train the model
-model.train(X[0:2], y[0:2], validation_data=(X_test, y_test),
-            epochs=20, batch_size=128, print_every=1)
+model.train(X, y, validation_data=(X_test, y_test),
+            epochs=2, batch_size=128, print_every=1)
 
 print('done')

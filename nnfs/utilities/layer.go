@@ -1,7 +1,6 @@
 package nnfs
 
 import (
-	"fmt"
 	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
@@ -76,9 +75,6 @@ func (layer *LayerDense) Backward(dvalues *mat.Dense) {
 	}
 
 	layer.Dbiases = SumAxis0KeepDimsTrue(dvalues)
-	if layer.Dbiases.At(0, 0) != 0 {
-		fmt.Println("Dvalues:", dvalues)
-	}
 	if layer.Bias_Regulizer_L1 > 0 {
 		layer.Dbiases.Apply(func(r, c int, v float64) float64 {
 			if layer.Bias_Regulizer_L1 >= 0 {

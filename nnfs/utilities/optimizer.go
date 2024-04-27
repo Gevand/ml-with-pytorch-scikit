@@ -253,23 +253,13 @@ func (optimizer *OptimizerAdam) UpdateParameters(layer *LayerDense) {
 		return v + (sgd / sqrt)
 	}, layer.Weights)
 
-	// layer.biases += -self.current_learning_rate * \
-	//         bias_momentums_corrected / \
-	//         (np.sqrt(bias_cache_corrected) +
-	//          self.epsilon)
-
 	layer.Biases.Apply(func(r, c int, v float64) float64 {
 
 		sgd := (-1 * optimizer.CurrentLearningRate * bias_momentums_corrected.At(r, c))
 		sqrt := math.Sqrt(bias_cache_corrected.At(r, c)) + optimizer.Epsilon
 		return v + (sgd / sqrt)
 	}, layer.Biases)
-	if layer.Biases.At(0, 0) != 0 {
-		fmt.Println("Bias", layer.Biases)
-		fmt.Println("DBiases", layer.Dbiases)
-		fmt.Println("Bias Momentum", layer.Bias_Momentums)
-		fmt.Println("Bias Momentum Corrected", bias_momentums_corrected)
-	}
+
 }
 
 func (optimizer *OptimizerAdam) PostUpdateParams() {
