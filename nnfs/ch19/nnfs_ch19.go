@@ -57,9 +57,11 @@ func Run2() {
 func Run3() {
 	fmt.Println("Training images")
 	X, y := u.Create_fashion_data(false)
+	X_val, y_val := u.Create_fashion_data(true)
 	u.Shuffle(X, y)
 	u.Scale_fashion_data(X)
 	X_reshape := u.Reshape_fashion_data(X)
+	X_val_reshape := u.Reshape_fashion_data(X_val)
 
 	model := u.NewModel()
 	model.Accuracy = u.NewAccuracy_Classification()
@@ -72,7 +74,8 @@ func Run3() {
 	model.Add(loss_activation)
 	model.Set(loss_activation.Loss, u.NewOptimizerAdam(0.001, 1e-3, 1e-7, 0.9, 0.999))
 	model.Finalize()
-	model.Train_image(X_reshape, y, 20, 128, 1)
+	model.Train_image(X_reshape, y, 10, 128, 100)
+	model.Evaluate(X_val_reshape, y_val, len(X_val_reshape))
 }
 
 func generateImage(dense *mat.Dense) image.Image {

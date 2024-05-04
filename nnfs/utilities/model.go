@@ -1,7 +1,9 @@
 package nnfs
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -59,6 +61,34 @@ func (model *Model) Train(X, y *mat.Dense, epochs, print_every int) {
 			fmt.Println("epoch", i, "data loss -->", model.Data_Loss, "regularization_loss -->", regularization_loss, "loss -->", loss, "lr -->", model.Optimizer.GetLearningRate(), "accuracy -->", accuracy, "%")
 		}
 		model.Optimizer.PostUpdateParams()
+	}
+}
+
+func (model *Model) Evaluate(X []*mat.Dense, y []*mat.Dense, batch_size int) {
+	steps := len(X) / batch_size
+	if steps*batch_size < len(X) {
+		steps += 1
+	}
+
+	for step := 0; step < steps; step++ {
+		batch_x_raw := []float64{}
+		batch_y_raw := []float64{}
+
+		start := step * batch_size
+		end := (step + 1) * batch_size
+		if end > len(X) {
+			end = len(X)
+		}
+		for i, x := range X[start:end] {
+			batch_x_raw = append(batch_x_raw, x.RawMatrix().Data...)
+			batch_y_raw = append(batch_y_raw, y[start+i].RawMatrix().Data...)
+		}
+
+		batch_x := mat.NewDense(end-start, X[0].RawMatrix().Cols, batch_x_raw)
+		batch_y := mat.NewDense(end-start, y[0].RawMatrix().Cols, batch_y_raw)
+		output := model.Forward(batch_x, batch_y)
+		accuracy := model.Accuracy.Compare(output, batch_y) * 100
+		fmt.Println("step", step, "val data loss -->", model.Data_Loss, "validation accuracy -->", accuracy, "%")
 	}
 }
 
@@ -165,5 +195,38 @@ func (model *Model) Finalize() {
 			layer.SetPrevious(model.Layers[index-1])
 			layer.SetNext(nil)
 		}
+	}
+}
+
+type Model_Save struct {
+	Params [][]float64
+}
+
+func (model *Model) Save(path string) {
+	model_params := [][]float64{}
+	for _, layer := range model.Layers {
+		layer_params := layer.GetParameters()
+		model_params = append(model_params, layer_params)
+	}
+	model_save := Model_Save{}
+	model_save.Params = model_params
+	str, _ := json.Marshal(model_save)
+	os.WriteFile(path, str, 0644)
+}
+
+func (model *Model) Load(path string) {
+	txt, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("Unable to load file", path, "due to ", err)
+		return
+	}
+	model_save := Model_Save{}
+	if err := json.Unmarshal(txt, &model_save); err != nil {
+		fmt.Println("Unable to work with the file", path, "due to ", err)
+		return
+	}
+	for i, layer := range model.Layers {
+		layer_params := model_save.Params[i]
+		layer.SetParameters(layer_params)
 	}
 }

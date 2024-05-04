@@ -15,6 +15,8 @@ type ILayer interface {
 	GetPrevious() ILayer
 	GetNext() ILayer
 	GetDInputs() *mat.Dense
+	GetParameters() []float64
+	SetParameters([]float64)
 }
 
 type LayerDense struct {
@@ -92,7 +94,19 @@ func (layer *LayerDense) Backward(dvalues *mat.Dense) {
 	layer.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, layer.Weights.RawMatrix().Rows, nil)
 	layer.Dinputs.Mul(dvalues, layer.Weights.T())
 }
+func (layer *LayerDense) GetParameters() []float64 {
+	result := []float64{}
+	result = append(result, layer.Weights.RawMatrix().Data...)
+	result = append(result, layer.Biases.RawMatrix().Data...)
+	return result
+}
 
+func (layer *LayerDense) SetParameters(params []float64) {
+	weights_data := params[0:len(layer.Weights.RawMatrix().Data)]
+	bias_data := params[len(layer.Weights.RawMatrix().Data):]
+	layer.Weights = mat.NewDense(layer.Weights.RawMatrix().Rows, layer.Weights.RawMatrix().Cols, weights_data)
+	layer.Biases = mat.NewDense(layer.Biases.RawMatrix().Rows, layer.Biases.RawMatrix().Cols, bias_data)
+}
 func (layer *LayerDense) SetPrevious(layer_or_loss ILayer) {
 	layer.Prev = layer_or_loss
 }
@@ -190,6 +204,13 @@ func (layer *LayerInput) Backward(dvalues *mat.Dense) {
 func NewInputLayer() *LayerInput {
 	output := &LayerInput{}
 	return output
+}
+
+func (activation *LayerInput) GetParameters() []float64 {
+	return []float64{}
+}
+
+func (activation *LayerInput) SetParameters(params []float64) {
 }
 
 func (layer *LayerInput) SetPrevious(layer_or_loss ILayer) {

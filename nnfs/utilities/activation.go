@@ -42,6 +42,13 @@ func (activation *ActivationRelu) Backward(dvalues *mat.Dense) {
 	}, activation.Dinputs)
 }
 
+func (activation *ActivationRelu) GetParameters() []float64 {
+	return []float64{}
+}
+
+func (activation *ActivationRelu) SetParameters(params []float64) {
+}
+
 func (activation *ActivationRelu) SetPrevious(layer_or_loss ILayer) {
 	activation.Prev = layer_or_loss
 }
@@ -204,6 +211,13 @@ func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) BackwardCombined(dv
 
 }
 
+func (activation *ActivationSoftMaxLossCategoricalCrossEntropy) GetParameters() []float64 {
+	return []float64{}
+}
+
+func (activation *ActivationSoftMaxLossCategoricalCrossEntropy) SetParameters(params []float64) {
+}
+
 func (combine *ActivationSoftMaxLossCategoricalCrossEntropy) GetDInputs() *mat.Dense {
 	return combine.Dinputs
 }
@@ -276,6 +290,13 @@ func (activation *ActivationLinear) Forward(input *mat.Dense) {
 func (activation *ActivationLinear) Backward(dvalues *mat.Dense) {
 	activation.Dinputs = mat.NewDense(dvalues.RawMatrix().Rows, dvalues.RawMatrix().Cols, nil)
 	activation.Dinputs.Copy(dvalues)
+}
+
+func (activation *ActivationLinear) GetParameters() []float64 {
+	return []float64{}
+}
+
+func (activation *ActivationLinear) SetParameters(params []float64) {
 }
 
 func (activation *ActivationLinear) SetPrevious(layer_or_loss ILayer) {
