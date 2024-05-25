@@ -49,6 +49,7 @@ losses = []
 
 def train1():  # overfit for the first poisition, won't work well with random initializations of the board
     for i in tqdm(range(epochs)):
+        global epsilon
         game = Gridworld(size=4, mode='static')
         # game is a 4 x 4 with 4 arrays signifying the 4 possible items on the screen  so it gets reshaped to 1 x 64 + some random noise is added
         state_ = game.board.render_np().reshape(1, 64) + (np.random.rand(1, 64) / 10.0)
@@ -231,7 +232,7 @@ def train3():  # replay + a second network that is updated every 500 steps
                 mov = 0
 
 
-train3()
+train1()
 plt.figure(figsize=(10, 7))
 plt.plot(losses)
 plt.xlabel("Epochs", fontsize=22)
