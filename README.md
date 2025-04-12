@@ -9,3 +9,5 @@ Neural network from scratch book, but doing it in Golang
 ## rl-with-pytorch
 Reinforcement learning books with pytorch
 
+## llm-fs
+Large languate models from scratch.
